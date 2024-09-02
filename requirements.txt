@@ -1,0 +1,4 @@
+aiodns
+ariadne
+aiohttp
+sqlalchemy
