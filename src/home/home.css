@@ -1,0 +1,69 @@
+.drop-box {
+  padding: 5%;
+  /* Create a drop shadow effect; */
+  box-shadow: 0 0 0.5em 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+}
+
+.create-btn {
+  margin-top: 9px;
+}
+
+.row div.card-header {
+  padding: 0px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  max-width: 350px;
+  max-height: 350px;
+  min-height: 350px;
+  overflow: hidden;
+}
+
+img.card-img {
+  object-fit: cover;
+  object-position: center;
+  display: inline-block;
+  border-radius: 0px;
+}
+
+a {
+  text-decoration: none;
+}
+
+.card {
+  margin: 15px;
+  display: inline-block;
+  border-radius: 10px;
+  text-overflow: ellipsis;
+  min-width: 345px;
+}
+
+.card-body {
+  height: 160px;
+  overflow: hidden;
+}
+
+p.card-text {
+  /* text-overflow: ellipsis;
+  overflow: hidden; */
+  /* white-space: nowrap; */
+  display: -webkit-box;
+  max-width: 200px;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 315px;
+}
+
+.card-header i {
+  font-size: 170px;
+}
+
+.head-row {
+  margin-bottom: 30px;
+}
+
+.card-footer p {
+  margin: 0px;
+}

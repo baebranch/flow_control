@@ -1,0 +1,160 @@
+# Server Status
+type Status {
+  success: Boolean!
+  message: String
+  errors: [String]
+  status: String!
+  server_time: String!
+  version: String!
+}
+
+# Worksapce Type
+type Worksapce {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  created_at: String!
+  updated_at: String!
+}
+
+type WorkspaceResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  workspace: Worksapce
+}
+
+type WorkspaceResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  workspaces: [Worksapce]
+}
+
+# Flow Type
+type Flow {
+  id: ID!
+  name: String!
+  description: String
+  default: Boolean!
+  workspace_id: ID!
+  created_at: String!
+  updated_at: String!
+}
+
+type FlowResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  flow: Flow
+}
+
+type FlowResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  flows: [Flow]
+}
+
+# NodeType Type
+type NodeType {
+  id: ID!
+  slug: String!
+  name: String!
+  description: String
+  fields: JSON!
+  created_at: String!
+  updated_at: String!
+}
+
+type NodeTypeResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  nodeType: NodeType
+}
+
+type NodeTypeResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  nodeTypes: [NodeType]
+}
+
+# EdgeType Type
+type EdgeType {
+  id: ID!
+  slug: String!
+  name: String!
+  description: String
+  fields: JSON!
+  created_at: String!
+  updated_at: String!
+}
+
+type EdgeTypeResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  edgeType: EdgeType
+}
+
+type EdgeTypeResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  edgeTypes: [EdgeType]
+}
+
+# Node Type
+type Node {
+  id: ID!
+  nid: String!
+  node: JSON!
+  flow_id: ID!
+  workspace_id: ID!
+  node_type_id: ID!
+  created_at: String!
+  updated_at: String!
+}
+
+type NodeResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  node: Node
+}
+
+type NodeResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  nodes: [Node]
+}
+
+# Edge Type
+type Edge {
+  id: ID!
+  eid: String!
+  edge: JSON!
+  flow_id: ID!
+  workspace_id: ID!
+  edge_type_id: ID!
+  created_at: String!
+  updated_at: String!
+}
+
+type EdgeResult {
+  success: Boolean!
+  message: String
+  errors: [String]
+  edge: Edge
+}
+
+type EdgeResults {
+  success: Boolean!
+  message: String
+  errors: [String]
+  edges: [Edge]
+}

@@ -1,0 +1,72 @@
+# Schema
+schema {
+	query: Query
+	mutation: Mutation
+}
+
+# Scalars
+scalar JSON
+
+# Query
+type Query {
+  # Server Status
+  getStatus: Status!
+
+  # Workspace
+  getWorkspace(id: ID!): WorkspaceResult!
+  getWorkspaces: WorkspaceResults!
+
+  # Flow
+  getFlow(id: ID!): FlowResult!
+  getFlows(workspace_id: ID): FlowResults!
+  getDefaultFlow(workspace_id: ID): FlowResult!
+
+  # Node Type
+  getNodeType(id: ID!): NodeTypeResult!
+  getNodeTypes: NodeTypeResults!
+
+  # Edge Type
+  getEdgeType(id: ID!): EdgeTypeResult!
+  getEdgeTypes: EdgeTypeResults!
+ 
+  # Node
+  getNode(id: ID!): NodeResult!
+  getNodes(flow_id: ID, workspace_id: ID): NodeResults!
+
+  # Edge
+  getEdge(id: ID!): EdgeResult!
+  getEdges(flow_id: ID, workspace_id: ID): EdgeResults!
+}
+
+# Mutation
+type Mutation {
+  # Workspace
+  createWorkspace(name: String!, description: String, icon: String): WorkspaceResult!
+  updateWorkspace(id: ID!, name: String, description: String, icon: String): WorkspaceResult!
+  deleteWorkspace(id: ID!): WorkspaceResult!
+
+  # Flow
+  createFlow(name: String!, description: String, workspace_id: ID!): FlowResult!
+  updateFlow(id: ID!, name: String, description: String, workspace_id: ID): FlowResult!
+  deleteFlow(id: ID!): FlowResult!
+  
+  # Node Type
+  createNodeType(name: String!, description: String, slug: String!): NodeTypeResult!
+  updateNodeType(id: ID!, name: String, description: String, slug: String): NodeTypeResult!
+  deleteNodeType(id: ID!): NodeTypeResult!
+
+  # Edge Type
+  createEdgeType(name: String!, description: String, slug: String!): EdgeTypeResult!
+  updateEdgeType(id: ID!, name: String, description: String, slug: String): EdgeTypeResult!
+  deleteEdgeType(id: ID!): EdgeTypeResult!
+
+  # Node
+  createNode(node: JSON!, nid: String!, flow_id: ID!, workspace_id: ID!, node_type_id: ID!): NodeResult!
+  updateNode(id: ID, nid: String!, node: JSON, flow_id: ID, workspace_id: ID, node_type_id: ID): NodeResult!
+  deleteNode(nid: ID!): NodeResult!
+
+  # Edge
+  createEdge(edge: JSON!, flow_id: ID!, workspace_id: ID!, edge_type_id: ID!): EdgeResult!
+  updateEdge(id: ID!, edge: JSON, flow_id: ID, workspace_id: ID, edge_type_id: ID): EdgeResult!
+  deleteEdge(id: ID!): EdgeResult!
+}

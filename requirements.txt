@@ -2,3 +2,4 @@ aiodns
 ariadne
 aiohttp
 sqlalchemy
+pyinstaller

@@ -1,0 +1,30 @@
+.card {
+  border: 1px solid #ededed;
+  border-radius: 10px;
+  max-width: 350px;
+
+}
+
+.card-title {
+  background-color: rgba(255, 255, 255, 0.412);
+  /* background-color: red; */
+  font-weight: 600;
+  color: #000;
+  border-bottom: 1px solid #ededed;
+  padding: 5px 15px;
+  border-radius: 10px 10px 0 0;
+}
+
+.card-title p {
+  margin: 0;
+}
+
+.card-body {
+  background-color: white;
+  padding: 15px 15px;
+  border-radius: 0 0 10px 10px;
+}
+
+.card-body p {
+  margin: 0;
+}

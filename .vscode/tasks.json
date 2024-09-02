@@ -1,0 +1,74 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Windows Executable",
+      "type": "shell",
+      "command": "pyinstaller",
+      "args": [
+        "--onefile",
+        "--noconsole",
+        "--icon=favicon.ico",
+        "flow.pyw"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Node & Edge Type Seeder",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "-m",
+        "server.db.seed_types"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Start React Dev",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": "^(ERROR|WARNING)\\s+(.*)$",
+            "severity": 1,
+            "message": 2
+          },
+          {
+            "regexp": "^\\s+at\\s+(.*):(\\d+):(\\d+)$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "starting dev server",
+          "endsPattern": "ready in"
+        }
+      }
+    },
+    {
+      "label": "Stop React Dev",
+      "command": "echo ${input:terminate}",
+      "type": "shell",
+      "problemMatcher": []
+    }   
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "Start React Dev"
+    }
+  ]
+}

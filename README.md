@@ -4,17 +4,38 @@ Using React Flow to create a flow control application, primarily for designing, 
 
 ## Getting up and running
 
-Install the dependencies:
+Install the javascript dependencies:
 
 ```bash
 npm install # or `pnpm install` or `yarn install`
 ```
 
-Run the development server:
+Install the python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the python server:
+
+```bash
+python -m server.server
+```
+
+Run the javascript development server:
 
 ```bash
 npm run dev
 ```
+
+## Building the app
+To build the app, run the following command:
+
+```bash
+pyinstaller --onefile --noconsole --icon=favicon.ico flow.pyw
+```
+The executable will be in the `dist` folder.
+
 
 ## Customizing the app:
 
