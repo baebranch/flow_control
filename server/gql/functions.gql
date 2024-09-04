@@ -63,10 +63,10 @@ type Mutation {
   # Node
   createNode(node: JSON!, nid: String!, flow_id: ID!, workspace_id: ID!, node_type_id: ID!): NodeResult!
   updateNode(id: ID, nid: String!, node: JSON, flow_id: ID, workspace_id: ID, node_type_id: ID): NodeResult!
-  deleteNode(nid: ID!): NodeResult!
+  deleteNode(nid: String!): NodeResult!
 
   # Edge
   createEdge(edge: JSON!, flow_id: ID!, workspace_id: ID!, edge_type_id: ID!): EdgeResult!
-  updateEdge(id: ID!, edge: JSON, flow_id: ID, workspace_id: ID, edge_type_id: ID): EdgeResult!
-  deleteEdge(id: ID!): EdgeResult!
+  updateEdge(id: ID, eid: String!, edge: JSON, flow_id: ID, workspace_id: ID, edge_type_id: ID): EdgeResult!
+  deleteEdge(eid: ID!): EdgeResult!
 }

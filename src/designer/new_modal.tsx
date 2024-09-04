@@ -6,8 +6,8 @@ import Button from 'react-bootstrap/Button';
 import { useViewport, useReactFlow } from 'reactflow';
 
 import { Client, gql } from '../api';
-import { Int } from 'graphql-request/alpha/schema/scalars';
 import { field } from 'graphql-request/alpha/schema';
+import { Int } from 'graphql-request/alpha/schema/scalars';
 
 
 // Get the current node and edge types to render new node forms
@@ -35,9 +35,7 @@ function getNodeTypes() {
 getNodeTypes();
 
 // Create node request
-function createNode(node: any, workspace: any, activeFlow: any, node_type_id: Int) {
-  console.log('workspace:', workspace);
-  console.log('activeFlow:', activeFlow);
+function createNode(node: any, activeFlow: any, node_type_id: any) {
   let mutation = gql`mutation {
     createNode(node: "${encodeURIComponent(JSON.stringify(node))}", nid: "${node.id}", flow_id: ${ parseInt(activeFlow.id)}, workspace_id: ${parseInt(activeFlow.workspace_id)}, node_type_id: ${node_type_id}) {
       success
@@ -51,12 +49,11 @@ function createNode(node: any, workspace: any, activeFlow: any, node_type_id: In
         node_type_id
         created_at
         updated_at
-        }
-        }
-        }`;
-        console.log('mutation:', mutation);
+      }
+    }
+  }`;
+  
   Client(mutation).then((data: any) => {
-    console.log(data);
   })
 }
 
@@ -119,7 +116,7 @@ function NewNode({ show, setShow, setNodes, activeWorkspace, activeFlow }: { sho
 
     console.log('node type', nodes);
     // Send node data to the server
-    createNode(newNode, activeWorkspace, activeFlow, nodes.indexOf(e.target[1].value));
+    createNode(newNode, activeFlow, parseInt(e.target[1].value));
     
     // Close the modal
     handleClose();

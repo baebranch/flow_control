@@ -1,7 +1,7 @@
 import sqlalchemy as sql
 from sqlalchemy.sql import text
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, MetaData, select, String, JSON, DateTime, ForeignKey, Integer, Text, inspect
+from sqlalchemy import create_engine, MetaData, select, String, JSON, DateTime, ForeignKey, Integer, Text, inspect, update
 from sqlalchemy.orm import Session, DeclarativeBase, mapped_column, validates, relationship, Mapped, sessionmaker, reconstructor
 
 from server.db import *
@@ -15,7 +15,7 @@ class Workspace(Base):
   description = sql.Column(sql.Text, nullable=True)
   icon = sql.Column(sql.String, nullable=True)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
-  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
   flows = relationship('Flow', back_populates='workspace', cascade='all, delete, delete-orphan')
   nodes = relationship('Node', back_populates='workspace', cascade='all, delete, delete-orphan')
@@ -37,7 +37,7 @@ class Flow(Base):
   description = sql.Column(sql.Text, nullable=True)
   default = sql.Column(sql.Boolean, default=False)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
-  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
   workspace_id = sql.Column(sql.Integer, sql.ForeignKey('workspaces.id'))
   workspace = relationship('Workspace', back_populates='flows')
@@ -83,7 +83,7 @@ class EdgeType(Base):
   description = sql.Column(sql.Text, nullable=True)
   fields = sql.Column(sql.JSON, nullable=True)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
-  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
   edges = relationship('Edge', back_populates='edge_type')
 
@@ -102,10 +102,11 @@ class Node(Base):
   nid = sql.Column(sql.VARCHAR, nullable=False)
   node = sql.Column(sql.JSON, nullable=False)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
-  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
   flow_id = sql.Column(sql.Integer, sql.ForeignKey('flows.id'))
   flow = relationship('Flow', back_populates='nodes')
+
 
   workspace_id = sql.Column(sql.Integer, sql.ForeignKey('workspaces.id'))
   workspace = relationship('Workspace', back_populates='nodes')
@@ -133,7 +134,7 @@ class Edge(Base):
   eid = sql.Column(sql.VARCHAR, nullable=False)
   edge = sql.Column(sql.JSON, nullable=False)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
-  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+  updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
   flow_id = sql.Column(sql.Integer, sql.ForeignKey('flows.id'))
   flow = relationship('Flow', back_populates='edges')

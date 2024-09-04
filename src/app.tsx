@@ -1,6 +1,8 @@
-import 'bootstrap/dist/css/bootstrap.css';
 import './app.css';
+import 'bootstrap/dist/css/bootstrap.css';
+import { ReactFlowProvider } from 'reactflow';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 
 import Home from './home/home';
 import Designer from './designer/designer';
@@ -30,7 +32,11 @@ export default function App() {
           />
           <Route 
             path="/designer"
-            element={<Designer activeWorkspace={activeWorkspace} flows={flows} />} 
+            element={
+              <ReactFlowProvider>
+                <Designer activeWorkspace={activeWorkspace} flows={flows} />
+              </ReactFlowProvider>
+            } 
           />
         </Routes>
       </Router>

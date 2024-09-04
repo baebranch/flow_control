@@ -11,8 +11,19 @@ body,
 }
 .react-flow__controls-button {
   flex: 1;
-  /* width: 20px;
-  max-width: 20px; */
+  width: 20px;
+  height: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+.react-flow__controls-button:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+.react-flow__controls-button:active {
+  background-color: #e2e6ea;
+  border-color: #d3d9df !important;
 }
 .n-node {
   order: 6;
@@ -31,4 +42,40 @@ body,
 }
 .react-flow__controls-interactive {
   order: 2;
+}
+.btn-group {
+  margin-right: 10px;
+}
+.disabled-btn {
+  padding: 0px;
+  padding-left: 1px;
+}
+.crumb {
+  /* border-left: 1px solid lightgray; */
+  /* border-left: 1px solid #a1a5aa; */
+}
+/* Bootstrap like secondary button styling for buttons with the .modify class */
+.modify > .btn {
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+  color: #495057;
+}
+.modify > .btn:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #495057;
+}
+.modify > .btn:active {
+  background-color: #e2e6ea;
+  border-color: #d3d9df !important;
+  color: #495057;
+}
+.react-flow__minimap > svg {
+  border-radius: 0.375rem;
+}
+
+#root > div > div > div.react-flow__panel.react-flow__controls.bottom.left {
+  border-radius: 0.375rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 0px rgba(0, 0, 0, 0), 0 0px 0px rgba(0, 0, 0, 0);
 }

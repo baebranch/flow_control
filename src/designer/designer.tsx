@@ -4,9 +4,12 @@ import {
   addEdge,
   Controls,
   Viewport,
+  Position,
   ReactFlow,
   Background,
+  NodeToolbar,
   useViewport,
+  useReactFlow,
   useEdgesState,
   useNodesState,
   ControlButton,
@@ -16,6 +19,7 @@ import {
   useOnViewportChange
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState, useCallback, useEffect } from "react";
@@ -26,11 +30,21 @@ import { Client, gql } from '../api';
 import { CardNode } from "../custom/card";
 import { Source } from "../custom/source";
 import { Int } from "graphql-request/alpha/schema/scalars";
+import { Button, ButtonGroup, ButtonToolbar } from "react-bootstrap";
+
+import type { EdgeTypes } from "reactflow";
 
 
-const initialNodes: any[] = [];
-const initialEdges: any[] = [];
-const nodeTypes: {} = { source: Source, card: CardNode };
+
+let initialNodes: any[] = [];
+let initialEdges: any[] = [];
+const nodeTypes: {} = {
+  // Custom node types here!
+  source: Source, card: CardNode
+};
+const edgeTypes: {} = {
+  // Custom edge types here!
+} satisfies EdgeTypes;
 
 function pushNodeChanges(change: any) {
   let node_data = JSON.stringify({ position: change.position });
@@ -46,14 +60,70 @@ function pushNodeChanges(change: any) {
   }`;
 
   Client(mutation).then((data: any) => {
+    // console.log("Node update: ", data);
   })
 }
+
 
 export default function Designer({ activeWorkspace, flows }: { activeWorkspace: any, flows: any }) {
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
+  const { deleteElements } = useReactFlow();
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+
+  function pushEdgeConnection(params: any) {
+    let edge_data = JSON.stringify(params);
+    let mutation = gql`mutation {
+      createEdge(edge: "${encodeURIComponent(edge_data)}", flow_id: ${parseInt(flows.activeFlow.id)}, workspace_id: ${parseInt(activeWorkspace.id)}, edge_type_id: 1) {
+        success
+        message
+        errors
+        edge {
+          eid
+        }
+      }
+    }`;
+
+    Client(mutation).then((data: any) => {
+      // console.log(data);
+    })
+  }
+
+  function removeNode(nodeId: any) {
+    let mutation = gql`mutation {
+      deleteNode(nid: "${nodeId}") {
+        success
+        message
+        errors
+        node {
+          nid
+        }
+      }
+    }`;
+
+    Client(mutation).then((data: any) => {
+      // console.log(data);
+    })
+  };
+
+  function removeEdge(edgeId: any) {
+    let mutation = gql`mutation {
+      deleteEdge(eid: "${edgeId}") {
+        success
+        message
+        errors
+        edge {
+          eid
+        }
+      }
+    }`;
+
+    Client(mutation).then((data: any) => {
+      // console.log(data);
+    })
+  };
 
   function getFlow(workspace: any, flow_id: Int) {
     let query = gql`{
@@ -119,17 +189,18 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
     Client(query).then((data: any) => {
       for (let node of data.getNodes.nodes) {
         node = JSON.parse(node.node);
-        initialNodes.push(node);
+
+        setNodes((nds: any) => {
+          return nds.concat(node);
+        });
       }
 
       for (let edge of data.getEdges.edges) {
-        edge = JSON.parse(edge.edge);
-        initialEdges.push(edge);
-      }
 
-      // Set states
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+        setEdges((eds: any) => {
+          return addEdge(edge.edge, eds);
+        });
+      }
     })
   }
 
@@ -150,61 +221,152 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onNodesChange = useCallback(
     (changes: any) => {
+      console.log("Node changes: ", changes);
       setNodes((nds) => {
         // Loop through changes and push to the server
         for (let change of changes) {
           if (change.type === 'position' && change.dragging === true) {
             pushNodeChanges(change);
           }
+
+          if (change.type === 'select' && change.selected === true) {
+            setSelectedNode(change.id);
+          }
+
+          if (change.type === 'remove') {
+            removeNode(change.id);
+          }
         }
 
+        console.log(selectedNode);
         return applyNodeChanges(changes, nds);
       });
     },
     [],
   );
 
-  const onEdgesChange = useCallback(
+  const onNodesDelete = useCallback(
     (changes: any) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds));
     },
     [],
   );
+
+  const onEdgesChange = useCallback(
+    (changes: any) => {
+      console.log("Edge changes: ", changes);
+      setEdges((eds: any) => {
+        return applyEdgeChanges(changes, eds);
+      });
+    },
+    [],
+  );
+
+  const onEdgesDelete = useCallback(
+    (changes: any) => {
+      console.log("Edge delete: ", changes);
+      for (let change of changes) {
+        removeEdge(change.id);
+      }
+    },
+    [],
+  );
+
   const onConnect = useCallback(
     (params: any) => {
-      setEdges((eds) => addEdge(params, eds))
+      console.log("Nodes and Edges: ", nodes, edges),
+        console.log("Edge params: ", params);
+      setEdges((eds: any) => {
+        params.id = uuidv4();
+        pushEdgeConnection(params);
+        return addEdge(params, eds);
+      })
     },
     [],
   );
 
   return (
     <>
-      <ReactFlowProvider>
-        <div style={{ height: '100%', width: '100%' }}>
+      <div style={{ height: '100%', width: '100%' }}>
+        <ReactFlow
+          defaultNodes={initialNodes}
+          defaultEdges={initialEdges}
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          edges={edges}
+          edgeTypes={edgeTypes}
+          onConnect={onConnect}
+          onNodesDelete={onNodesDelete}
+          onEdgesDelete={onEdgesDelete}
+          onEdgesChange={onEdgesChange}
+          fitView
+        >
+          <Background />
           <NewModal show={show} setShow={setShow} setNodes={setNodes} activeWorkspace={activeWorkspace} activeFlow={flows.activeFlow} />
-          <ReactFlow
-            nodes={nodes}
-            onNodesChange={onNodesChange}
-            onConnect={onConnect}
-            edges={edges}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            fitView
-          >
-            <Background />
-            <Panel position="top-left">top-left</Panel>
-            <Controls>
-              <ControlButton onClick={() => setShow(true)} title="New Node" aria-label="New Node" className="n-node">
-                <i className="bi bi-card-heading"></i>
-              </ControlButton>
-              <ControlButton onClick={() => navigateToHome()} title="Home" aria-label="Home" className="n-home">
-                <i className="bi bi-house-door-fill"></i>
-              </ControlButton>
-            </Controls>
-            <MiniMap pannable={true} nodeColor='#483098' />
-          </ReactFlow>
-        </div>
-      </ReactFlowProvider>
+
+          <NodeToolbar nodeId={selectedNode} position={Position.Top} offset={-10} align="start">
+            <ButtonGroup className="modify" aria-label="modify">
+              <Button className="btn" variant="Light" size="sm">Edit</Button>
+              <Button variant="Light" size="sm" onClick={(e) => {
+                  deleteElements({ nodes: [{ id: selectedNode }] });
+                }
+              }>Delete</Button>
+            </ButtonGroup>
+          </NodeToolbar>
+
+          <Panel position="top-right">
+            <div>
+
+            </div>
+          </Panel>
+
+          <Panel position="top-left">
+            <div>
+              <ButtonToolbar aria-label="breadcrumb-toolbar">
+                <ButtonGroup className="home-and-back" aria-label="home-and-back">
+                  <Button variant="light" onClick={() => navigateToHome()} title="Back" className="btn">
+                    <i className="bi bi-arrow-left"></i>
+                  </Button>
+                  <Button variant="light" onClick={() => navigateToHome()} title="Refresh" className="btn">
+                    <i className="bi bi-arrow-clockwise"></i>
+                  </Button>
+                </ButtonGroup>
+
+                <ButtonGroup className="breadcrumbs" aria-label="breadcrumbs">
+                  <Button variant="light" onClick={() => navigateToHome()} title="Menu" className="btn">
+                    <i className="bi bi-list"></i>
+                  </Button>
+                  <Button variant="light" onClick={() => navigateToHome()} title="Workspaces" className="btn">
+                    <i className="bi bi-grid"></i>
+                  </Button>
+                </ButtonGroup>
+
+                <ButtonGroup className="breadcrumbs" aria-label="breadcrumbs">
+                  <Button variant="light" onClick={() => navigateToHome()} title="Home" className="btn">
+                    <i className="bi bi-house"></i>
+                  </Button>
+                  <Button variant="light" onClick={() => navigateToHome()} className="btn crumb">
+                    <i className="bi bi-house-door-fill"></i>
+                  </Button>
+                </ButtonGroup>
+              </ButtonToolbar>
+            </div>
+          </Panel>
+
+          <Controls>
+            <ControlButton onClick={() => setShow(true)} title="New Node" aria-label="New Node" className="n-node">
+              <i className="bi bi-card-heading"></i>
+            </ControlButton>
+            <ControlButton onClick={() => navigateToHome()} title="Home" aria-label="Home" className="n-home">
+              <i className="bi bi-house-door-fill"></i>
+            </ControlButton>
+          </Controls>
+
+          <div className="minimap-wrapper">
+            <MiniMap pannable={true} nodeColor='#000000' maskColor="#f8f9fa" />
+          </div>
+        </ReactFlow>
+      </div>
     </>
   );
 }

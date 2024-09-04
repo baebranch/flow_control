@@ -17,6 +17,11 @@ def getStatus(_, info, **kwargs):
   }
 
 
+# Updated functions
+def updateFlowandWorksapceTS(item):
+  item.flow.updated_at = datetime.now(timezone.utc)
+  item.workspace.updated_at = datetime.now(timezone.utc)
+
 # Workspace resolvers
 @response_handler
 def getWorkspace(_, info, **kwargs):
@@ -118,6 +123,8 @@ def createNode(_, info, **kwargs):
   node.node = unquote(kwargs.get('node', '{}'))
   session.add(node)
   session.commit()
+  updateFlowandWorksapceTS(node)
+  session.commit()
   return {'node': node}
 
 @response_handler
@@ -130,7 +137,9 @@ def updateNode(_, info, **kwargs):
   
   for key, value in kwargs.items():
     setattr(node, key, value)
-
+  
+  updateFlowandWorksapceTS(node)
+  
   session.commit()
   return {'node': node}
 
@@ -156,20 +165,31 @@ def getEdges(_, info, **kwargs):
 @response_handler
 def createEdge(_, info, **kwargs):
   edge = Edge(**kwargs)
+  edge.edge = loads(unquote(kwargs.get('edge', '{}')))
+  edge.eid = edge.edge['id']
   session.add(edge)
+  session.commit()
+  updateFlowandWorksapceTS(edge)
   session.commit()
   return {'edge': edge}
 
 @response_handler
 def updateEdge(_, info, **kwargs):
-  edge = session.query(Edge).filter_by(id=kwargs.get('id')).first()
+  edge = session.query(Edge).filter_by(eid=kwargs.get('eid')).first()
+
+  if edge_data:= kwargs.pop('edge', None):
+    edge_data = loads(unquote(edge_data))
+    kwargs['edge'] = dumps({**loads(edge.edge), **edge_data})
+
   edge.update(**kwargs)
+  updateFlowandWorksapceTS(edge)
+
   session.commit()
   return {'edge': edge}
 
 @response_handler
 def deleteEdge(_, info, **kwargs):
-  edge = session.query(Edge).filter_by(id=kwargs.get('id')).first()
+  edge = session.query(Edge).filter_by(eid=kwargs.get('eid')).first()
   session.delete(edge)
   session.commit()
   return {'edge': edge}
