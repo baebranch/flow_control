@@ -16,6 +16,7 @@ dist-ssr
 .venv/*
 dist/*.exe
 build/*
+*.db
 
 # Editor directories and files
 !.vscode/extensions.json
