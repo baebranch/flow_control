@@ -38,6 +38,7 @@ type Flow {
   name: String!
   description: String
   default: Boolean!
+  position: JSON
   workspace_id: ID!
   created_at: String!
   updated_at: String!

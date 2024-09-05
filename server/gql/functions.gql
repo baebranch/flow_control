@@ -47,7 +47,7 @@ type Mutation {
 
   # Flow
   createFlow(name: String!, description: String, workspace_id: ID!): FlowResult!
-  updateFlow(id: ID!, name: String, description: String, workspace_id: ID): FlowResult!
+  updateFlow(id: ID!, name: String, description: String, workspace_id: ID, position: JSON): FlowResult!
   deleteFlow(id: ID!): FlowResult!
   
   # Node Type

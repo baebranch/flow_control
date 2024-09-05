@@ -1,11 +1,19 @@
 import "./custom.css";
-import { Handle, Position } from 'reactflow';
+import { memo } from "react";
+import { Handle, Position, NodeResizer } from 'reactflow';
 
 
-export function Source({ data }: { data: any }) {
+function Source({ data, selected }: { data: any, selected: any }) {
+
   return (
     <>
-      <div className="card">
+      <NodeResizer
+        color="#ff0071"
+        isVisible={selected}
+        minWidth={100}
+        minHeight={100}
+      />
+      <div className="source-node">
         <div className="card-title">
           {data.title}
         </div>
@@ -20,3 +28,5 @@ export function Source({ data }: { data: any }) {
     </>
   );
 }
+
+export default memo(Source);

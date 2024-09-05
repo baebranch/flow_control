@@ -1,18 +1,41 @@
-.card {
-  border: 1px solid #ededed;
+/* .react_flow___source-node { */
+.react_flow___node {
+  border: 1px solid #495057;
   border-radius: 10px;
-  max-width: 350px;
+  background-color: rgba(255, 255, 255, 0.412);
+  width: 100%;
+}
 
+.react-flow__handle {
+  padding: 3px !important;
+}
+
+div.react-flow__node.react-flow__node-source, div.react-flow__node.react-flow__node-card {
+  border: 1px solid #495057;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 1);
+}
+
+div.react-flow__resize-control {
+  border-color: #495057 !important;
+  border-width: 0.5px !important;
+}
+
+div.react-flow__resize-control.handle {
+  background-color: #495057 !important;
+  width: 8px;
+  height: 8px;
+}
+
+.source-node {
+  height: inherit;
 }
 
 .card-title {
-  background-color: rgba(255, 255, 255, 0.412);
-  /* background-color: red; */
+  border-bottom: 1px solid #ededed;
   font-weight: 600;
   color: #000;
-  border-bottom: 1px solid #ededed;
   padding: 5px 15px;
-  border-radius: 10px 10px 0 0;
 }
 
 .card-title p {
@@ -20,9 +43,8 @@
 }
 
 .card-body {
-  background-color: white;
   padding: 15px 15px;
-  border-radius: 0 0 10px 10px;
+  border: none;
 }
 
 .card-body p {

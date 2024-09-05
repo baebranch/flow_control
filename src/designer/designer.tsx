@@ -3,20 +3,16 @@ import {
   MiniMap,
   addEdge,
   Controls,
-  Viewport,
   Position,
   ReactFlow,
   Background,
   NodeToolbar,
-  useViewport,
   useReactFlow,
   useEdgesState,
   useNodesState,
   ControlButton,
   applyEdgeChanges,
-  applyNodeChanges,
-  ReactFlowProvider,
-  useOnViewportChange
+  applyNodeChanges
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from 'uuid';
@@ -26,10 +22,15 @@ import { useState, useCallback, useEffect } from "react";
 
 import "./designer.css";
 import NewModal from "./new_modal";
+import EditNode from "./edit_modal";
+import Input from "../custom/input";
+import Default from "../custom/default";
 import { Client, gql } from '../api';
-import { CardNode } from "../custom/card";
-import { Source } from "../custom/source";
+import CardNode from "../custom/card";
+import Source from "../custom/source";
+import Output from "../custom/output";
 import { Int } from "graphql-request/alpha/schema/scalars";
+import { ViewportChangeLogger } from "../home/viewport_func";
 import { Button, ButtonGroup, ButtonToolbar } from "react-bootstrap";
 
 import type { EdgeTypes } from "reactflow";
@@ -40,14 +41,13 @@ let initialNodes: any[] = [];
 let initialEdges: any[] = [];
 const nodeTypes: {} = {
   // Custom node types here!
-  source: Source, card: CardNode
+  source: Source, card: CardNode, output: Output, input: Input, default: Default
 };
 const edgeTypes: {} = {
   // Custom edge types here!
 } satisfies EdgeTypes;
 
-function pushNodeChanges(change: any) {
-  let node_data = JSON.stringify({ position: change.position });
+function pushNodeChanges(change: any, node_data: any) {
   let mutation = gql`mutation {
     updateNode(nid: "${change.id}", node: "${encodeURIComponent(node_data)}") {
       success
@@ -63,15 +63,27 @@ function pushNodeChanges(change: any) {
     // console.log("Node update: ", data);
   })
 }
-
+  
+function findNodeById(id: any, nodes: any) {
+  for (let node of nodes) {
+    if (node.id === id) {
+      return node;
+    }
+  }
+} 
 
 export default function Designer({ activeWorkspace, flows }: { activeWorkspace: any, flows: any }) {
   const navigate = useNavigate();
-  const [show, setShow] = useState(false);
   const { deleteElements } = useReactFlow();
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [ foundNode, setFoundNode ] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+
+  // console.log("Active Workspace: ", activeWorkspace);
+  // console.log("Active Flow: ", flows);
 
   function pushEdgeConnection(params: any) {
     let edge_data = JSON.stringify(params);
@@ -221,24 +233,32 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onNodesChange = useCallback(
     (changes: any) => {
-      console.log("Node changes: ", changes);
+      // console.log("Node changes: ", changes);
       setNodes((nds) => {
         // Loop through changes and push to the server
+        // console.log("Nodes: ", nds);
         for (let change of changes) {
           if (change.type === 'position' && change.dragging === true) {
-            pushNodeChanges(change);
+            let node_data = JSON.stringify({ position: change.position });
+            pushNodeChanges(change, node_data);
           }
 
           if (change.type === 'select' && change.selected === true) {
             setSelectedNode(change.id);
+            setFoundNode(findNodeById(change.id, nds));
           }
 
           if (change.type === 'remove') {
             removeNode(change.id);
           }
+
+          if (change.type === 'dimensions') {
+            let node_data = JSON.stringify({ style: change.dimensions });
+            pushNodeChanges(change, node_data);
+          }
         }
 
-        console.log(selectedNode);
+        // console.log(selectedNode);
         return applyNodeChanges(changes, nds);
       });
     },
@@ -253,7 +273,7 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onEdgesChange = useCallback(
     (changes: any) => {
-      console.log("Edge changes: ", changes);
+      // console.log("Edge changes: ", changes);
       setEdges((eds: any) => {
         return applyEdgeChanges(changes, eds);
       });
@@ -263,7 +283,7 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onEdgesDelete = useCallback(
     (changes: any) => {
-      console.log("Edge delete: ", changes);
+      // console.log("Edge delete: ", changes);
       for (let change of changes) {
         removeEdge(change.id);
       }
@@ -273,8 +293,8 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onConnect = useCallback(
     (params: any) => {
-      console.log("Nodes and Edges: ", nodes, edges),
-        console.log("Edge params: ", params);
+      // console.log("Nodes and Edges: ", nodes, edges),
+      // console.log("Edge params: ", params);
       setEdges((eds: any) => {
         params.id = uuidv4();
         pushEdgeConnection(params);
@@ -283,6 +303,8 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
     },
     [],
   );
+
+  ViewportChangeLogger(flows);
 
   return (
     <>
@@ -299,14 +321,19 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onEdgesChange={onEdgesChange}
-          fitView
+          defaultViewport={flows.activeFlow.position}
         >
           <Background />
-          <NewModal show={show} setShow={setShow} setNodes={setNodes} activeWorkspace={activeWorkspace} activeFlow={flows.activeFlow} />
 
-          <NodeToolbar nodeId={selectedNode} position={Position.Top} offset={-10} align="start">
+          <NewModal show={showNewModal} setShow={setShowNewModal} setNodes={setNodes} activeWorkspace={activeWorkspace} activeFlow={flows.activeFlow} />
+          <EditNode show={showEditModal} setShow={setShowEditModal} setNodes={setNodes} activeFlow={flows.activeFlow} node={foundNode} />
+
+          <NodeToolbar nodeId={selectedNode} position={Position.Top} offset={10} align="start">
             <ButtonGroup className="modify" aria-label="modify">
-              <Button className="btn" variant="Light" size="sm">Edit</Button>
+              <Button className="btn" variant="Light" size="sm" onClick={(e) => {
+                  console.log("Edit node: ", selectedNode);
+                  setShowEditModal(true);
+                }}>Edit</Button>
               <Button variant="Light" size="sm" onClick={(e) => {
                   deleteElements({ nodes: [{ id: selectedNode }] });
                 }
@@ -354,17 +381,12 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
           </Panel>
 
           <Controls>
-            <ControlButton onClick={() => setShow(true)} title="New Node" aria-label="New Node" className="n-node">
+            <ControlButton onClick={() => setShowNewModal(true)} title="New Node" aria-label="New Node" className="n-node">
               <i className="bi bi-card-heading"></i>
-            </ControlButton>
-            <ControlButton onClick={() => navigateToHome()} title="Home" aria-label="Home" className="n-home">
-              <i className="bi bi-house-door-fill"></i>
             </ControlButton>
           </Controls>
 
-          <div className="minimap-wrapper">
-            <MiniMap pannable={true} nodeColor='#000000' maskColor="#f8f9fa" />
-          </div>
+          <MiniMap pannable={true} nodeColor='#000000' />
         </ReactFlow>
       </div>
     </>

@@ -45,6 +45,7 @@ export default function Home({setActiveWorkspace, flows}: {setActiveWorkspace: a
           id
           name
           description
+          position
           workspace_id
           created_at
           updated_at

@@ -90,7 +90,12 @@ def createFlow(_, info, **kwargs):
 @response_handler
 def updateFlow(_, info, **kwargs):
   flow = session.query(Flow).filter_by(id=kwargs.get('id')).first()
-  flow.update(**kwargs)
+  if position := kwargs.get('position', None):
+    kwargs['position'] = loads(unquote(position))
+  
+  for key, value in kwargs.items():
+    setattr(flow, key, value)
+
   session.commit()
   return {'flow': flow}
 

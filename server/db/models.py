@@ -36,6 +36,7 @@ class Flow(Base):
   name = sql.Column(sql.String, nullable=False)
   description = sql.Column(sql.Text, nullable=True)
   default = sql.Column(sql.Boolean, default=False)
+  position = sql.Column(sql.JSON, nullable=True)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
   updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -51,7 +52,7 @@ class Flow(Base):
     return name
 
   def __repr__(self):
-    return f'<Flow {self.id} {self.name} {self.description} {self.default} {self.created_at} {self.updated_at} {self.workspace_id}>'
+    return f'<Flow {self.id} {self.name} {self.description} {self.default} {self.position} {self.created_at} {self.updated_at} {self.workspace_id}>'
 
 
 class NodeType(Base):
@@ -166,10 +167,11 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Add column to the workspace table
-schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN icon TEXT;'))
+# Schema updates
+# schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN icon TEXT;'))
 # schema_update_handler(session.execute, text('ALTER TABLE node_types ADD COLUMN fields JSON;'))
 # schema_update_handler(session.execute, text('ALTER TABLE edge_types ADD COLUMN fields JSON;'))
+# schema_update_handler(session.execute, text('ALTER TABLE flows ADD COLUMN position JSON;'))
 
 # Was to try to implement automatic schema updates
 metadata = MetaData()
