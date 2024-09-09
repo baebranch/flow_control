@@ -20,6 +20,12 @@
       "module": "server.server"
     },
     {
+      "name": "Flow Control UI debug",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "desktop.gui"
+    },
+    {
       "name": "Python Debugger: Current File",
       "type": "debugpy",
       "request": "launch",
