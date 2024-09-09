@@ -79,10 +79,10 @@ mutation.set_field("deleteEdge", deleteEdge)
 
 
 # Build schema
-if __name__ == '__main__' or __name__ == 'server.server':
-  type_defs = gql(load_schema_from_path("server/gql/"))
-else:
+if os.path.exists('assets'):
   type_defs = gql(load_schema_from_path("gql/"))
+else:
+  type_defs = gql(load_schema_from_path("server/gql/"))
 schema = make_executable_schema(
   type_defs, query, mutation, snake_case_fallback_resolvers
 )
