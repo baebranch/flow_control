@@ -11,9 +11,11 @@ type Status {
 # Worksapce Type
 type Worksapce {
   id: ID!
+  slug: String!
   name: String!
   description: String
   icon: String
+  default: Flow
   created_at: String!
   updated_at: String!
 }
@@ -35,6 +37,7 @@ type WorkspaceResults {
 # Flow Type
 type Flow {
   id: ID!
+  slug: String!
   name: String!
   description: String
   default: Boolean!

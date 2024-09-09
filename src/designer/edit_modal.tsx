@@ -17,8 +17,7 @@ function updateNode(node: any, activeFlow: any) {
     }
   }`;
   
-  Client(mutation).then((data: any) => {
-  })
+  Client(mutation)
 }
 
 export function RenderNodeTypeForm(field: any, value: any) {
@@ -42,7 +41,7 @@ export function RenderNodeTypeForm(field: any, value: any) {
   )
 };
 
-function EditNode({ show, setShow, setNodes, activeFlow, node }: { show: boolean, setShow: any, setNodes: any, activeWorkspace: any, activeFlow: any, node: any }) {
+function EditNode({ show, setShow, setNodes, activeFlow, node }: { show: boolean, setShow: any, setNodes: any, activeFlow: any, node: any }) {
   // console.log('Editing node', node);
   const handleClose = () => setShow(false);
   

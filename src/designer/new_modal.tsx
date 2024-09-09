@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
+import { useReactFlow } from 'reactflow';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-import { useViewport, useReactFlow } from 'reactflow';
 
 import { Client, gql } from '../api';
-import { field } from 'graphql-request/alpha/schema';
-import { Int } from 'graphql-request/alpha/schema/scalars';
 
+
+function generateRandomString(length: number) {
+  const array = new Uint8Array(length);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => ('0' + byte.toString(16)).slice(-2)).join('');
+}
 
 // Get the current node and edge types to render new node forms
 let nodeTypes: any = 0;
@@ -34,10 +38,9 @@ function getNodeTypes() {
 }
 getNodeTypes();
 
-// Create node request
 function createNode(node: any, activeFlow: any, node_type_id: any) {
   let mutation = gql`mutation {
-    createNode(node: "${encodeURIComponent(JSON.stringify(node))}", nid: "${node.id}", flow_id: ${ parseInt(activeFlow.id)}, workspace_id: ${parseInt(activeFlow.workspace_id)}, node_type_id: ${node_type_id}) {
+    createNode(node: "${encodeURIComponent(JSON.stringify(node))}", nid: "${node.id}", flow_id: ${ parseInt(activeFlow.id)}, workspace_id: ${parseInt(activeFlow.workspace_id)}, node_type_id: ${node_type_id + 1}) {
       success
       message
       errors
@@ -53,9 +56,9 @@ function createNode(node: any, activeFlow: any, node_type_id: any) {
     }
   }`;
   
-  Client(mutation).then((data: any) => {
-  })
+  Client(mutation)
 }
+
 
 export function RenderNodeTypeForm(field: any, value: any) {
   return (
@@ -79,15 +82,13 @@ export function RenderNodeTypeForm(field: any, value: any) {
 };
 
 
-function NewNode({ show, setShow, setNodes, activeWorkspace, activeFlow }: { show: boolean, setShow: any, setNodes: any, activeWorkspace: any, activeFlow: any }) {
+function NewNode({ show, setShow, setNodes, activeFlow }: { show: boolean, setShow: any, setNodes: any, activeFlow: any }) {
   let fieldIdx = 0;
-  const [nodeType, setNodeType] = useState<any>({ 'id': 1, 'fields': { 'label': 'textarea' } });
-  const [selectValue, setSelectValue] = useState(0);
-  const nodes: any = ['input', 'output', 'source', 'card', 'default'];
   const handleClose = () => setShow(false);
-  // const { x, y, zoom } = useViewport();
   const { screenToFlowPosition } = useReactFlow();
-  // console.log("nodeType: ", nodeType)
+  const [selectValue, setSelectValue] = useState(0);
+  const nodes: any = ['input', 'output', 'source', 'card', 'default', 'subflow'];
+  const [nodeType, setNodeType] = useState<any>({ 'id': 1, 'fields': { 'label': 'textarea' } });
   
   function handleSubmit(e: any) {
     e.preventDefault();
@@ -98,6 +99,11 @@ function NewNode({ show, setShow, setNodes, activeWorkspace, activeFlow }: { sho
       const fieldName = e.target[i].name;
       const fieldValue = e.target[i].value;
       formData[fieldName] = fieldValue;
+    }
+
+    // If the node type is a subflow, add the flow slug to the node data
+    if (selectValue === 5) {
+      formData['slug'] = generateRandomString(3);
     }
 
     const newNode = {

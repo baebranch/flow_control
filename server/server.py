@@ -1,16 +1,24 @@
+# import sys
+# sys.path.append('./dist')
+
 import json
 import asyncio
 import logging
 import aiohttp
 from aiohttp import web, ClientSession
-from ariadne import explorer, graphql_sync, ObjectType, MutationType, gql, load_schema_from_path, snake_case_fallback_resolvers, make_executable_schema
+from ariadne import graphql_sync, ObjectType, MutationType, gql, load_schema_from_path, snake_case_fallback_resolvers, make_executable_schema
+
+if __name__ == '__main__':
+  from ariadne import explorer
 
 from server.resolvers import *
 
 
 # Aiohttp webserver setup
 routes = web.RouteTableDef()
-explorer_html = explorer.ExplorerGraphiQL().html(None)
+if __name__ == '__main__':
+  explorer_html = explorer.ExplorerGraphiQL().html(None)
+
 HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "*",
@@ -73,7 +81,10 @@ mutation.set_field("deleteEdge", deleteEdge)
 
 
 # Build schema
-type_defs = gql(load_schema_from_path("server/gql/"))
+if __name__ == '__main__' or __name__ == 'server.server':
+  type_defs = gql(load_schema_from_path("server/gql/"))
+else:
+  type_defs = gql(load_schema_from_path("gql/"))
 schema = make_executable_schema(
   type_defs, query, mutation, snake_case_fallback_resolvers
 )
@@ -102,27 +113,38 @@ async def graphql_api(request: web.Request) -> web.Response:
 async def graphql_api_options(_: web.Request) -> web.Response:
   return web.json_response({"message": "Accept all hosts"}, headers=HEADERS)
 
-@routes.route("*", "/{tail:.*}")
-async def proxy(request: web.Request) -> web.Response:
-  async with ClientSession() as session:
-    async with session.request(
-      method=request.method,
-      url=f"http://localhost:5173{request.path_qs}",
-      headers={key: value for key, value in request.headers.items()},
-      data=await request.read(),
-    ) as response:
-      return web.Response(
-        body=await response.read(),
-        status=response.status,
-        headers={key: value for key, value in response.headers.items()},
-      )
+# @routes.route("*", "/{tail:.*}")
+# async def proxy(request: web.Request) -> web.Response:
+#   async with ClientSession() as session:
+#     async with session.request(
+#       method=request.method,
+#       url=f"http://localhost:5173{request.path_qs}",
+#       headers={key: value for key, value in request.headers.items()},
+#       data=await request.read(),
+#     ) as response:
+#       return web.Response(
+#         body=await response.read(),
+#         status=response.status,
+#         headers={key: value for key, value in response.headers.items()},
+#       )
+
+# Server index.html file
+@routes.get('/')
+async def index(request: web.Request):
+  return web.FileResponse('index.html')
 
 # Web App initialization
 app = web.Application()
 app.add_routes(routes)
 
+def run_app():
+  logging.basicConfig(level=logging.WARNING)
+  asyncio.get_event_loop().set_debug(enabled=True) 
+  web.run_app(app, host='localhost', port=1212, shutdown_timeout=1)
+
 # Run the app
-if __name__ == '__main__':
+print(__name__)
+if __name__ == '__main__' or __name__ == 'server.server':
   logging.basicConfig(level=logging.DEBUG)
   asyncio.get_event_loop().set_debug(enabled=True) 
   web.run_app(app, host='localhost', port=1212, shutdown_timeout=1)

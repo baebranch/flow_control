@@ -1,5 +1,6 @@
 import sqlalchemy as sql
 from sqlalchemy.sql import text
+from secrets import token_urlsafe
 from datetime import datetime, timezone
 from sqlalchemy import create_engine, MetaData, select, String, JSON, DateTime, ForeignKey, Integer, Text, inspect, update
 from sqlalchemy.orm import Session, DeclarativeBase, mapped_column, validates, relationship, Mapped, sessionmaker, reconstructor
@@ -11,9 +12,11 @@ from server.db import *
 class Workspace(Base):
   __tablename__ = 'workspaces'
   id = sql.Column(sql.Integer, primary_key=True, autoincrement=True)
+  slug = sql.Column(sql.String, nullable=False, unique=True, default=token_urlsafe(6))
   name = sql.Column(sql.String, nullable=False)
   description = sql.Column(sql.Text, nullable=True)
   icon = sql.Column(sql.String, nullable=True)
+  default_flow_id = sql.Column(sql.Integer, nullable=True)
   created_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc))
   updated_at = sql.Column(sql.DateTime, default=datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -27,12 +30,19 @@ class Workspace(Base):
     return name
 
   def __repr__(self):
-    return f'<Workspace {self.id} {self.name} {self.description} {bool(self.icon)} {self.created_at} {self.updated_at}>'
+    return f'<Workspace {self.id} {self.slug} {self.name} {self.description} {bool(self.icon)} {self.default_flow_id} {self.created_at} {self.updated_at}>'
+  
+  @property
+  def default(self):
+    if self.default_flow_id:
+      return session.query(Flow).filter_by(id = self.default_flow_id).first()
+    return session.query(Flow).filter_by(default = True).where(Flow.workspace_id == self.id).first()
 
 
 class Flow(Base):
   __tablename__ = 'flows'
   id = sql.Column(sql.Integer, primary_key=True, autoincrement=True)
+  slug = sql.Column(sql.String, nullable=False, unique=True, default=token_urlsafe(6))
   name = sql.Column(sql.String, nullable=False)
   description = sql.Column(sql.Text, nullable=True)
   default = sql.Column(sql.Boolean, default=False)
@@ -168,10 +178,13 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 # Schema updates
-# schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN icon TEXT;'))
-# schema_update_handler(session.execute, text('ALTER TABLE node_types ADD COLUMN fields JSON;'))
-# schema_update_handler(session.execute, text('ALTER TABLE edge_types ADD COLUMN fields JSON;'))
+# schema_update_handler(session.execute, text('ALTER TABLE flows ADD COLUMN slug VARCHAR;'))
 # schema_update_handler(session.execute, text('ALTER TABLE flows ADD COLUMN position JSON;'))
+# schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN icon TEXT;'))
+# schema_update_handler(session.execute, text('ALTER TABLE edge_types ADD COLUMN fields JSON;'))
+# schema_update_handler(session.execute, text('ALTER TABLE node_types ADD COLUMN fields JSON;'))
+# schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN slug VARCHAR;'))
+# schema_update_handler(session.execute, text('ALTER TABLE workspaces ADD COLUMN default_flow_id INTEGER;'))  
 
 # Was to try to implement automatic schema updates
 metadata = MetaData()

@@ -1,19 +1,18 @@
-/* .react_flow___source-node { */
 .react_flow___node {
-  border: 1px solid #495057;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.412);
-  width: 100%;
+  /* border: 1px solid #495057 !important;
+  border-radius: 10px !important;
+  background-color: rgba(255, 255, 255, 0.412) !important; */
+  width: 100% !important;
 }
 
 .react-flow__handle {
   padding: 3px !important;
 }
 
-div.react-flow__node.react-flow__node-source, div.react-flow__node.react-flow__node-card {
-  border: 1px solid #495057;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 1);
+div.react-flow__node.react-flow__node-source, div.react-flow__node.react-flow__node-card, div.react-flow__node-default, .react-flow__node-default, .react-flow__node-default, .react-flow__node-input, .react-flow__node-output, .react-flow__node-group, .react-flow__node-subflow {
+  border: 1px solid #495057 !important;
+  border-radius: 10px !important;
+  background-color: rgba(255, 255, 255, 1) !important;
 }
 
 div.react-flow__resize-control {
@@ -45,6 +44,10 @@ div.react-flow__resize-control.handle {
 .card-body {
   padding: 15px 15px;
   border: none;
+}
+
+.card-footer {
+  padding: 15px 15px;
 }
 
 .card-body p {

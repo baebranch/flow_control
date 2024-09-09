@@ -16,32 +16,34 @@ import {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from 'uuid';
-import { useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Button, ButtonGroup, ButtonToolbar, Breadcrumb } from "react-bootstrap";
 
 import "./designer.css";
 import NewModal from "./new_modal";
 import EditNode from "./edit_modal";
 import Input from "../custom/input";
-import Default from "../custom/default";
 import { Client, gql } from '../api';
 import CardNode from "../custom/card";
 import Source from "../custom/source";
 import Output from "../custom/output";
-import { Int } from "graphql-request/alpha/schema/scalars";
+import Default from "../custom/default";
+import SubFlowNode from "../custom/subflow";
 import { ViewportChangeLogger } from "../home/viewport_func";
-import { Button, ButtonGroup, ButtonToolbar } from "react-bootstrap";
 
 import type { EdgeTypes } from "reactflow";
 
+// 
 
-
+// Initial nodes and edges
 let initialNodes: any[] = [];
 let initialEdges: any[] = [];
+
 const nodeTypes: {} = {
   // Custom node types here!
-  source: Source, card: CardNode, output: Output, input: Input, default: Default
+  source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode
 };
 const edgeTypes: {} = {
   // Custom edge types here!
@@ -59,9 +61,7 @@ function pushNodeChanges(change: any, node_data: any) {
     }
   }`;
 
-  Client(mutation).then((data: any) => {
-    // console.log("Node update: ", data);
-  })
+  Client(mutation)
 }
   
 function findNodeById(id: any, nodes: any) {
@@ -72,23 +72,25 @@ function findNodeById(id: any, nodes: any) {
   }
 } 
 
-export default function Designer({ activeWorkspace, flows }: { activeWorkspace: any, flows: any }) {
+
+export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: { activeWorkspace: any, setActiveWorkspace: any, flow: any }) {
+  // window.history.replaceState({}, '')
+
+  const urlParams = useParams();
   const navigate = useNavigate();
-  const { deleteElements } = useReactFlow();
+  const [loaded , setLoaded] = useState(false);
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
+  const [foundNode, setFoundNode] = useState<any>(null);
+  const { deleteElements, setViewport } = useReactFlow();
   const [showNewModal, setShowNewModal] = useState(false);
-  const [ foundNode, setFoundNode ] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
-
-  // console.log("Active Workspace: ", activeWorkspace);
-  // console.log("Active Flow: ", flows);
 
   function pushEdgeConnection(params: any) {
     let edge_data = JSON.stringify(params);
     let mutation = gql`mutation {
-      createEdge(edge: "${encodeURIComponent(edge_data)}", flow_id: ${parseInt(flows.activeFlow.id)}, workspace_id: ${parseInt(activeWorkspace.id)}, edge_type_id: 1) {
+      createEdge(edge: "${encodeURIComponent(edge_data)}", flow_id: ${parseInt(flow.activeFlow.id)}, workspace_id: ${parseInt(activeWorkspace.id)}, edge_type_id: 1) {
         success
         message
         errors
@@ -98,9 +100,7 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
       }
     }`;
 
-    Client(mutation).then((data: any) => {
-      // console.log(data);
-    })
+    Client(mutation)
   }
 
   function removeNode(nodeId: any) {
@@ -115,9 +115,7 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
       }
     }`;
 
-    Client(mutation).then((data: any) => {
-      // console.log(data);
-    })
+    Client(mutation)
   };
 
   function removeEdge(edgeId: any) {
@@ -132,20 +130,20 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
       }
     }`;
 
-    Client(mutation).then((data: any) => {
-      // console.log(data);
-    })
+    Client(mutation)
   };
 
-  function getFlow(workspace: any, flow_id: Int) {
+  function getFlows(slugs: any) {
     let query = gql`{
-      getFlow(id: ${flow_id}, workspace_id: ${workspace.id}) {
+      getFlows(slugs: ${JSON.stringify(slugs)}) {
         success
         message
         errors
-        flow {
+        flows {
           id
           name
+          slug
+          position
           description
           workspace_id
           created_at
@@ -155,19 +153,18 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
     }`;
 
     Client(query).then((data: any) => {
-      flows.setActiveFlow(data.getFlow.flow);
-      flows.setFlow((f: any[]) => f.concat(data.getFlow.flow));
-      loadFlowNodesAndEdges(data.getFlow.flow);
+      if (data.getFlows.flows[data.getFlows.flows.length - 1].id !== flow?.activeFlow?.id) {
+        flow.setFlows(data.getFlows.flows)
+      }
+      flow.setActiveFlow(data.getFlows.flows[data.getFlows.flows.length - 1]);
+      loadFlowNodesAndEdges(data.getFlows.flows[data.getFlows.flows.length - 1]);
     })
   }
 
-  function loadFlowNodesAndEdges(flow: any) {
-    if (nodes.length > 0 || edges.length > 0) {
-      return;
-    }
-
+  function loadFlowNodesAndEdges(f: any) {
+    console.log("Loading flow: ", f);
     let query = gql`query {
-      getNodes(flow_id: ${parseInt(flow.id)}) {
+      getNodes(flow_id: ${parseInt(f.id)}) {
         success
         message
         errors
@@ -179,10 +176,10 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
           node_type_id
           created_at
           updated_at
-        }
-      }
+          }
+          }
 
-      getEdges(flow_id: ${parseInt(flow.id)}) {
+      getEdges(flow_id: ${parseInt(f.id)}) {
         success
         message
         errors
@@ -196,22 +193,34 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
           updated_at
         }
       }
-    }`;
-
+      }`;
+      
+    // Reset the nodes and edges
+    setNodes([]);
+    setEdges([]);
+    
     Client(query).then((data: any) => {
+      // Set nodes
       for (let node of data.getNodes.nodes) {
         node = JSON.parse(node.node);
-
+        
         setNodes((nds: any) => {
           return nds.concat(node);
         });
       }
 
+      // Set edges
       for (let edge of data.getEdges.edges) {
 
         setEdges((eds: any) => {
           return addEdge(edge.edge, eds);
         });
+      }
+
+      // Set the viewport
+      if (f.position !== null || f.position !== undefined) {
+        console.log("Setting viewport: ", f.position);
+        setViewport(f.position);
       }
     })
   }
@@ -223,9 +232,9 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
     document.body.style.width = '100%';
     document.body.style.height = '100%';
 
-    // Load the nodes/edges for the active flow
-    loadFlowNodesAndEdges(flows.activeFlow);
-  }, [document.body.style.height]);
+    urlLoadFlow();
+
+  }, [flow.flows, urlParams, flow.activeFlow]);
 
   const navigateToHome = () => {
     navigate('/');
@@ -233,47 +242,44 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
 
   const onNodesChange = useCallback(
     (changes: any) => {
-      // console.log("Node changes: ", changes);
-      setNodes((nds) => {
-        // Loop through changes and push to the server
-        // console.log("Nodes: ", nds);
-        for (let change of changes) {
-          if (change.type === 'position' && change.dragging === true) {
-            let node_data = JSON.stringify({ position: change.position });
-            pushNodeChanges(change, node_data);
-          }
-
-          if (change.type === 'select' && change.selected === true) {
-            setSelectedNode(change.id);
-            setFoundNode(findNodeById(change.id, nds));
-          }
-
-          if (change.type === 'remove') {
-            removeNode(change.id);
-          }
-
-          if (change.type === 'dimensions') {
-            let node_data = JSON.stringify({ style: change.dimensions });
-            pushNodeChanges(change, node_data);
-          }
+      // Loop through changes and push to the server
+      for (let change of changes) {
+        if (change.type === 'position' && change.dragging === true) {
+          let node_data = JSON.stringify({ position: change.position });
+          pushNodeChanges(change, node_data);
         }
 
-        // console.log(selectedNode);
+        if ((change.type === 'select' || change.type === 'dragging')) {
+          setSelectedNode(change.id);
+        }
+        
+        if (change.type === 'remove') {
+          removeNode(change.id);
+        }
+
+        if (change.type === 'dimensions') {
+          let node_data = JSON.stringify({ style: change.dimensions });
+          pushNodeChanges(change, node_data);
+        }
+      }
+
+      // Update the nodes
+      setNodes((nds) => {
         return applyNodeChanges(changes, nds);
       });
     },
-    [],
+    [selectedNode],
   );
 
-  const onNodesDelete = useCallback(
-    (changes: any) => {
-    },
-    [],
-  );
+  // const onNodesDelete = useCallback(
+  //   (changes: any) => {
+  //   },
+  //   [],
+  // );
 
   const onEdgesChange = useCallback(
     (changes: any) => {
-      // console.log("Edge changes: ", changes);
+      console.log("Edge change: ", changes);
       setEdges((eds: any) => {
         return applyEdgeChanges(changes, eds);
       });
@@ -292,49 +298,88 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
   );
 
   const onConnect = useCallback(
-    (params: any) => {
-      // console.log("Nodes and Edges: ", nodes, edges),
-      // console.log("Edge params: ", params);
+    (changes: any) => {
       setEdges((eds: any) => {
-        params.id = uuidv4();
-        pushEdgeConnection(params);
-        return addEdge(params, eds);
+        changes.id = uuidv4();
+        return addEdge(changes, eds);
       })
+      pushEdgeConnection(changes);
     },
-    [],
+    [flow],
   );
 
-  ViewportChangeLogger(flows);
+  ViewportChangeLogger(activeWorkspace, setActiveWorkspace, flow);
+
+  function urlLoadFlow() {
+    let slugs = [urlParams.flowSlug].concat(urlParams['*']?.split('/').filter((slug: any) => slug !== ''));
+
+    if (flow.activeFlow === null || flow.activeFlow === undefined) {
+      if (slugs.length === 1) {
+        if (activeWorkspace.default?.position !== null) {
+          setViewport(activeWorkspace.default.position);
+        }
+  
+        flow.setActiveFlow(activeWorkspace.default);
+        flow.setFlows([activeWorkspace.default]);
+        loadFlowNodesAndEdges(activeWorkspace.default);
+      }
+      else {
+        getFlows(slugs);
+      }
+    }
+    else if (slugs[slugs.length - 1] !== flow.activeFlow.slug) {
+      if (slugs.length === 1) {
+        if (activeWorkspace.default?.position !== null) {
+          setViewport(activeWorkspace.default.position);
+        }
+  
+        flow.setActiveFlow(activeWorkspace.default);
+        flow.setFlows([activeWorkspace.default]);
+        loadFlowNodesAndEdges(activeWorkspace.default);
+      }
+      else {
+        getFlows(slugs);
+      }
+    }
+    else {
+      if (loaded === false) {
+        getFlows(slugs);
+        setLoaded(true);
+      }
+    }
+
+  }
 
   return (
     <>
-      <div style={{ height: '100%', width: '100%' }}>
+      <div className="react-flow-parent">
         <ReactFlow
-          defaultNodes={initialNodes}
-          defaultEdges={initialEdges}
-          nodes={nodes}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
           edges={edges}
+          nodes={nodes}
+          // onInit={() => loadFlowNodesAndEdges(flow.activeFlow)}
+          nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onConnect={onConnect}
-          onNodesDelete={onNodesDelete}
+          defaultNodes={initialNodes}
+          defaultEdges={initialEdges}
+          onNodesChange={onNodesChange}
+          // onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onEdgesChange={onEdgesChange}
-          defaultViewport={flows.activeFlow.position}
+          defaultViewport={flow.activeFlow?.position ? flow.activeFlow.position : { x: 0, y: 0, zoom: 1 }}
         >
           <Background />
 
-          <NewModal show={showNewModal} setShow={setShowNewModal} setNodes={setNodes} activeWorkspace={activeWorkspace} activeFlow={flows.activeFlow} />
-          <EditNode show={showEditModal} setShow={setShowEditModal} setNodes={setNodes} activeFlow={flows.activeFlow} node={foundNode} />
+          <EditNode show={showEditModal} setShow={setShowEditModal} setNodes={setNodes} activeFlow={flow.activeFlow} node={foundNode} />
+          <NewModal show={showNewModal} setShow={setShowNewModal} setNodes={setNodes} activeFlow={flow.activeFlow} />
 
           <NodeToolbar nodeId={selectedNode} position={Position.Top} offset={10} align="start">
             <ButtonGroup className="modify" aria-label="modify">
-              <Button className="btn" variant="Light" size="sm" onClick={(e) => {
-                  console.log("Edit node: ", selectedNode);
+              <Button className="btn" variant="Light" size="sm" onClick={() => {
+                  setFoundNode(findNodeById(selectedNode, nodes));                  
                   setShowEditModal(true);
                 }}>Edit</Button>
-              <Button variant="Light" size="sm" onClick={(e) => {
+              <Button variant="Light" size="sm" onClick={() => {
                   deleteElements({ nodes: [{ id: selectedNode }] });
                 }
               }>Delete</Button>
@@ -350,15 +395,6 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
           <Panel position="top-left">
             <div>
               <ButtonToolbar aria-label="breadcrumb-toolbar">
-                <ButtonGroup className="home-and-back" aria-label="home-and-back">
-                  <Button variant="light" onClick={() => navigateToHome()} title="Back" className="btn">
-                    <i className="bi bi-arrow-left"></i>
-                  </Button>
-                  <Button variant="light" onClick={() => navigateToHome()} title="Refresh" className="btn">
-                    <i className="bi bi-arrow-clockwise"></i>
-                  </Button>
-                </ButtonGroup>
-
                 <ButtonGroup className="breadcrumbs" aria-label="breadcrumbs">
                   <Button variant="light" onClick={() => navigateToHome()} title="Menu" className="btn">
                     <i className="bi bi-list"></i>
@@ -368,13 +404,30 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
                   </Button>
                 </ButtonGroup>
 
+                <ButtonGroup className="home-and-back" aria-label="home-and-back">
+                  <Button variant="light" onClick={() => navigate(-1)} title="Back" className="btn">
+                    <i className="bi bi-arrow-left"></i>
+                  </Button>
+                  <Button variant="light" onClick={() => window.location.reload()} title="Refresh" className="btn">
+                    <i className="bi bi-arrow-clockwise"></i>
+                  </Button>
+                </ButtonGroup>
+
                 <ButtonGroup className="breadcrumbs" aria-label="breadcrumbs">
-                  <Button variant="light" onClick={() => navigateToHome()} title="Home" className="btn">
-                    <i className="bi bi-house"></i>
-                  </Button>
-                  <Button variant="light" onClick={() => navigateToHome()} className="btn crumb">
-                    <i className="bi bi-house-door-fill"></i>
-                  </Button>
+                  <Breadcrumb>
+                    { flow.flows.map((f: any, index: number) => {
+                      let url = "/workspace/" + activeWorkspace.slug + "/" + (flow.flows.slice(0,index+1).map((f_slug: any) => {return f_slug.slug;}))?.join('/');
+                      return (
+                        <Breadcrumb.Item key={f.id} href={url} onClick={(e) => {
+                          e.preventDefault();
+                          flow.setFlows(flow.flows.slice(0,index+1));
+                          navigate(url);
+                        }} active={index == flow.flows.length ? true : false} >
+                          {f.name}
+                        </Breadcrumb.Item>
+                      );
+                    }) }
+                  </Breadcrumb>
                 </ButtonGroup>
               </ButtonToolbar>
             </div>
@@ -386,7 +439,7 @@ export default function Designer({ activeWorkspace, flows }: { activeWorkspace: 
             </ControlButton>
           </Controls>
 
-          <MiniMap pannable={true} nodeColor='#000000' />
+          <MiniMap pannable={true} nodeColor='#000000' onClick={() => {console.log('Minimap click')}} />
         </ReactFlow>
       </div>
     </>

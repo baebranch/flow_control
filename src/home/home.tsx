@@ -11,58 +11,43 @@ import { useState, useCallback, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 
 
-const formatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-const getWorkspacesQuery = gql`{
-  getWorkspaces {
-    success
-    message
-    errors
-    workspaces {
-      id
-      name
-      icon
-      description
-      created_at
-      updated_at
-    }
-  }
-}`;
+// const formatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 
-export default function Home({setActiveWorkspace, flows}: {setActiveWorkspace: any, flows: any}) {
+export default function Home({setActiveWorkspace, flow}: {setActiveWorkspace: any, flow: any}) {
   const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState<any>(null);
   const [createWorkspaceModal, showCreateWorkspaceModal] = useState(false);
 
-  function getDefaultFlow(workspace: any) {
-    let query = gql`{
-      getDefaultFlow(workspace_id: ${parseInt(workspace.id)}) {
+  const fetchWorkspaces = useCallback(async () => {
+    const query = gql`{
+      getWorkspaces {
         success
         message
         errors
-        flow {
+        workspaces {
           id
+          slug
           name
+          icon
+          default {
+            id
+            name
+            slug
+            description
+            created_at
+            updated_at
+            position
+          }
           description
-          position
-          workspace_id
           created_at
           updated_at
         }
       }
     }`;
-  
-    Client(query).then((data: any) => {
-      flows.setActiveFlow(data.getDefaultFlow.flow);
-      flows.setFlow([data.getDefaultFlow.flow]);
-      navigate('/designer');
-    })
-  }
 
-  const fetchWorkspaces = useCallback(async () => {
     try {
-      await Client(getWorkspacesQuery).then((data: any) => {
+      await Client(query).then((data: any) => {
         setWorkspaces(data.getWorkspaces.workspaces);
       })
     } catch (error) {
@@ -101,7 +86,9 @@ export default function Home({setActiveWorkspace, flows}: {setActiveWorkspace: a
                 <Card onClick={(e) => {
                     e.preventDefault();
                     setActiveWorkspace(workspace);
-                    getDefaultFlow(workspace);
+                    flow.setActiveFlow(workspace.default);
+                    flow.setFlows([workspace.default]);
+                    navigate('/workspace/' + workspace.slug + '/' + workspace.default.slug);
                   }}>
                   <Card.Header>
                     {(workspace.icon) ? <Card.Img className='align-middle' src={workspace.icon} width="350" height="350"/> : <i className='bi bi-image-alt'></i>}

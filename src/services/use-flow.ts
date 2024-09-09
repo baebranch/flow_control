@@ -61,3 +61,34 @@ export function useActiveFlow() {
     activeFlow
   }
 }
+
+export function useBreadCrumb() {
+  const getBreadCrumb = () => {
+    const breadCrumbString = localStorage.getItem('breadcrumb');
+
+    if (breadCrumbString === null || breadCrumbString === undefined) {
+      return [];
+    }
+    let breadCrumbObj = JSON.parse(breadCrumbString);
+    return breadCrumbObj;
+  };
+
+  const [breadCrumb, setBreadCrumb] = useState(getBreadCrumb());
+
+  function saveBreadCrumb(breadCrumbObj: any) {
+    if (breadCrumbObj === null || breadCrumbObj === undefined) {
+      localStorage.removeItem('breadcrumb');
+      setBreadCrumb([]);
+      return;
+    }
+
+    let breadCrumbString = JSON.stringify(breadCrumbObj);
+    localStorage.setItem('breadcrumb', breadCrumbString);
+    setBreadCrumb(breadCrumbObj);
+  };
+
+  return {
+    setBreadCrumb: saveBreadCrumb,
+    breadCrumb
+  }
+}

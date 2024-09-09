@@ -17,9 +17,9 @@ type Query {
   getWorkspaces: WorkspaceResults!
 
   # Flow
-  getFlow(id: ID!): FlowResult!
-  getFlows(workspace_id: ID): FlowResults!
   getDefaultFlow(workspace_id: ID): FlowResult!
+  getFlow(slug: String, workspace_id: ID!): FlowResult!
+  getFlows(workspace_id: ID, slugs: [String]): FlowResults!
 
   # Node Type
   getNodeType(id: ID!): NodeTypeResult!

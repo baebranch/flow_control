@@ -30,8 +30,8 @@ def getWorkspace(_, info, **kwargs):
 
 @response_handler
 def getWorkspaces(_, info, **kwargs):
-  worksapces = session.query(Workspace).all()
-  return {'workspaces': worksapces}
+  workspaces = session.query(Workspace).all()
+  return {'workspaces': workspaces}
 
 @response_handler
 def createWorkspace(_, info, **kwargs):
@@ -44,6 +44,7 @@ def createWorkspace(_, info, **kwargs):
   # Create the default main flow for the workspace
   flow = Flow(name='Main', workspace=workspace, description='The main flow for this workspace.', default=True)
   session.add(flow)
+  workspace.default = flow
   session.commit()
 
   # Return the new workspace
@@ -67,12 +68,17 @@ def deleteWorkspace(_, info, **kwargs):
 # Flow Resolvers
 @response_handler
 def getFlow(_, info, **kwargs):
-  flow = session.query(Flow).filter_by(id=kwargs.get('id')).first()
+  flow = session.query(Flow).filter_by(slug=kwargs.get('slug'), workspace_id=kwargs.get('workspace_id')).first()
   return {'flow': flow}
 
 @response_handler
 def getFlows(_, info, **kwargs):
-  flows = session.query(Flow).filter_by(workspace_id=kwargs.get('workspace_id')).all()
+  if workspace_id := kwargs.get('workspace_id', None):
+    flows = session.query(Flow).filter_by(workspace_id=workspace_id).all()
+  elif slugs := kwargs.get('slugs', None):
+    flows = session.query(Flow).filter(Flow.slug.in_(slugs)).all()
+  else:
+    raise Exception('Invalid query parameters.')
   return {'flows': flows}
 
 @response_handler
@@ -124,10 +130,18 @@ def getNodes(_, info, **kwargs):
 
 @response_handler
 def createNode(_, info, **kwargs):
+  # Create a new node model
   node = Node(**kwargs)
   node.node = unquote(kwargs.get('node', '{}'))
   session.add(node)
   session.commit()
+
+  # If the node is a subflow, create a new flow for it
+  if node.node_type.slug == 'subflow':
+    flow = Flow(name=loads(node.node)['data'].get('flow', 'SubFlow'), workspace=node.workspace, description=loads(node.node)['data'].get('body', 'A subflow.'), default=False, slug=loads(node.node)['data']['slug'])
+    session.add(flow)
+    session.commit()
+
   updateFlowandWorksapceTS(node)
   session.commit()
   return {'node': node}

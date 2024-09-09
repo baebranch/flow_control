@@ -16,6 +16,16 @@
       "problemMatcher": []
     },
     {
+      "label": "Build React APP",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "problemMatcher": []
+    },
+    {
       "label": "Node & Edge Type Seeder",
       "type": "shell",
       "command": "python",

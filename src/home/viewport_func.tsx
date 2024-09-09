@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
 import { Client, gql } from '../api';
 import { Viewport, useOnViewportChange } from 'reactflow';
  
-export function ViewportChangeLogger(flows: any) {
+export function ViewportChangeLogger(activeWorkspace: any, setActiveWorkspace: any, flow: any) {
 
   function updateFlowPosition(viewport: Viewport, activeFlow: any) {
+
     let mutation = gql`mutation {
       updateFlow(id: ${parseInt(activeFlow.id)}, position: "${encodeURIComponent(JSON.stringify(viewport))}") {
         success
@@ -16,27 +16,31 @@ export function ViewportChangeLogger(flows: any) {
         }
       }
     }`;
-    Client(mutation).then((data: any) => {
-    })
+    
+    Client(mutation)
     
     return null;
   };
   
   useOnViewportChange({
-    onStart: (viewport: Viewport) => {
-    },
+    // onStart: (viewport: Viewport) => {
+    // },
     
-    onChange: (viewport: Viewport) => {
-      // console.log('change', viewport);
-    },
+    // onChange: (viewport: Viewport) => {
+    // },
     
     onEnd: (viewport: Viewport) => {
-      // console.log('End', viewport);
+      console.log("Viewport changed...");
       // Update the flow position in the state and server
-      updateFlowPosition(viewport, flows.activeFlow);
-      let activeFlow = flows.activeFlow;
-      activeFlow.position = viewport;
-      flows.setActiveFlow(activeFlow);
+      updateFlowPosition(viewport, flow.activeFlow);
+
+      // Update the flow position in the workspace if the default flow is active
+      if (activeWorkspace.default.id === flow.activeFlow.id) {
+        console.log("Updating workspace default flow position...");
+        activeWorkspace.default.position = viewport;
+        setActiveWorkspace(activeWorkspace);
+        console.log("Active workspace: ", activeWorkspace);
+      }
     },
   });
 

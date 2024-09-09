@@ -16,5 +16,6 @@ splash_screen = webview.create_window('Flow Control', html=open('desktop/splash.
 webview.start(splash_close, (splash_screen,), http_server=False)
 
 # Open main window 
-webview.create_window('Flow Control', 'http://localhost:1212/') 
+# webview.create_window('Flow Control', 'http://localhost:1212/') 
+webview.create_window('Flow Control', html='./index.html')
 webview.start() 
