@@ -1,6 +1,4 @@
-# import sys
-# sys.path.append('./dist')
-
+import os
 import json
 import asyncio
 import logging
@@ -113,6 +111,7 @@ async def graphql_api(request: web.Request) -> web.Response:
 async def graphql_api_options(_: web.Request) -> web.Response:
   return web.json_response({"message": "Accept all hosts"}, headers=HEADERS)
 
+# Proxy route
 # @routes.route("*", "/{tail:.*}")
 # async def proxy(request: web.Request) -> web.Response:
 #   async with ClientSession() as session:
@@ -131,20 +130,35 @@ async def graphql_api_options(_: web.Request) -> web.Response:
 # Server index.html file
 @routes.get('/')
 async def index(request: web.Request):
-  return web.FileResponse('index.html')
+  if os.path.exists('assets'):
+    return web.FileResponse('index.html')
+  else:
+    return web.FileResponse('dist/index.html')
 
 # Web App initialization
 app = web.Application()
 app.add_routes(routes)
 
+if os.path.exists('assets'):
+  print('Using assets static path')
+  app.add_routes([web.static('/', './')])
+  routes.static('/', './')
+else:
+  print('Using dist static path')
+  app.add_routes([web.static('/', 'dist')])
+  routes.static('/', 'dist')
+
 def run_app():
-  logging.basicConfig(level=logging.WARNING)
-  asyncio.get_event_loop().set_debug(enabled=True) 
-  web.run_app(app, host='localhost', port=1212, shutdown_timeout=1)
+  logging.basicConfig(level=logging.DEBUG)
+  loop = asyncio.new_event_loop()
+  loop.set_debug(enabled=True) 
+  web.run_app(app, host='flow.localhost', port=1212, shutdown_timeout=1)
 
 # Run the app
 print(__name__)
-if __name__ == '__main__' or __name__ == 'server.server':
+print(os.getcwd())
+print("Asset path: ", os.path.exists('assets'))
+if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
   asyncio.get_event_loop().set_debug(enabled=True) 
   web.run_app(app, host='localhost', port=1212, shutdown_timeout=1)
