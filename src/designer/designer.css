@@ -95,3 +95,55 @@ body,
   padding: 0.5rem 1rem;
   margin-bottom: 0rem;
 }
+
+#root > div > div > div.react-flow__panel.top.right > div, .accordian {
+  min-width: 300px;
+  max-width: 300px;
+  border-color: #f8f9fa !important;
+  --bs-accordion-border-color: #f8f9fa !important;
+  background-color: rgba(223, 226, 230, 0.5);
+  border-radius: 0.375rem;
+}
+.accordian-header > button, .accordian-button, .collapsed {
+  text-align: center !important;
+  padding: 10px !important;
+  background-color: #f8f9fa;
+  color: #495057;
+  border-radius: 0.375rem;
+  border-radius: 0.375rem;
+}
+.accordion-button:active, .accordion-button:focus {
+  color: #495057;
+  background-color: #f8f9fa;
+  box-shadow: none;
+  border-color: none;
+}
+.accordion-button:not(.collapsed) {
+  outline: none !important;
+  box-shadow: none;
+  padding: 10px !important;
+  color: #495057;
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+}
+/* Accordian body */
+#root > div > div > div.react-flow__panel.top.right > div > div > div > div {
+  background-color: transparent;
+  color: #495057;
+  border-radius: 0 0 0.375rem 0.375rem;
+  padding: 10px;
+  font-size: 12px;
+}
+/* Accordian item */
+#root > div > div > div.react-flow__panel.top.right > div > div {
+  background-color: transparent !important;
+}
+#root > div > div > div.react-flow__panel.top.right > div > div > div > div > p {
+  margin: 3px;
+}
+hr {
+  margin: 6px 0px 6px 0px;
+}
+#root > div > div > div.react-flow__panel.top.right > div > div > div > div > div > button {
+  font-size: 12px;
+}

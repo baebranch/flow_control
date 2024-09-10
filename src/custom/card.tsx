@@ -21,6 +21,8 @@ function CardNode({ data, selected }: { data: any, selected: any }) {
         </div>
         <Handle type="target" position={Position.Top} id="a" />
         <Handle type="source" position={Position.Bottom} id="b" />
+        <Handle type="source" position={Position.Top} id="c" />
+        <Handle type="target" position={Position.Bottom} id="d" />
       </div>
     </>
   );

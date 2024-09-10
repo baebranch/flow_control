@@ -44,7 +44,7 @@ def createWorkspace(_, info, **kwargs):
   # Create the default main flow for the workspace
   flow = Flow(name='Main', workspace=workspace, description='The main flow for this workspace.', default=True)
   session.add(flow)
-  workspace.default = flow
+  workspace.default_flow_id = flow.id
   session.commit()
 
   # Return the new workspace
@@ -166,6 +166,11 @@ def updateNode(_, info, **kwargs):
 def deleteNode(_, info, **kwargs):
   node = session.query(Node).filter_by(nid=kwargs.get('nid')).first()
   session.delete(node)
+
+  if node.node_type.slug == 'subflow':
+    flow = session.query(Flow).filter_by(slug=loads(node.node)['data']['slug'], workspace_id=node.workspace_id).first()
+    session.delete(flow)
+  
   session.commit()
   return {'node': node}
 

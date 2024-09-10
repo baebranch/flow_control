@@ -14,12 +14,18 @@ import {
   applyEdgeChanges,
   applyNodeChanges
 } from "reactflow";
+import { 
+  Button,
+  ButtonGroup,
+  ButtonToolbar,
+  Breadcrumb,
+  Accordion
+} from "react-bootstrap";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from 'uuid';
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, ButtonGroup, ButtonToolbar, Breadcrumb } from "react-bootstrap";
 
 import "./designer.css";
 import NewModal from "./new_modal";
@@ -35,7 +41,6 @@ import { ViewportChangeLogger } from "../home/viewport_func";
 
 import type { EdgeTypes } from "reactflow";
 
-// 
 
 // Initial nodes and edges
 let initialNodes: any[] = [];
@@ -46,24 +51,10 @@ const nodeTypes: {} = {
   source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode
 };
 const edgeTypes: {} = {
-  // Custom edge types here!
+  // default: DefaultEdge
 } satisfies EdgeTypes;
 
-function pushNodeChanges(change: any, node_data: any) {
-  let mutation = gql`mutation {
-    updateNode(nid: "${change.id}", node: "${encodeURIComponent(node_data)}") {
-      success
-      message
-      errors
-      node {
-        nid
-      }
-    }
-  }`;
 
-  Client(mutation)
-}
-  
 function findNodeById(id: any, nodes: any) {
   for (let node of nodes) {
     if (node.id === id) {
@@ -74,11 +65,10 @@ function findNodeById(id: any, nodes: any) {
 
 
 export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: { activeWorkspace: any, setActiveWorkspace: any, flow: any }) {
-  // window.history.replaceState({}, '')
-
   const urlParams = useParams();
   const navigate = useNavigate();
   const [loaded , setLoaded] = useState(false);
+  const edgeReconnectSuccessful = useRef(true);
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
   const [foundNode, setFoundNode] = useState<any>(null);
@@ -86,6 +76,37 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
   const [showNewModal, setShowNewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [selectedEdge, setSelectedEdge] = useState<any>(null);
+  
+  function pushNodeChanges(change: any, node_data: any) {
+    let mutation = gql`mutation {
+      updateNode(nid: "${change.id}", node: "${encodeURIComponent(node_data)}") {
+        success
+        message
+        errors
+        node {
+          nid
+        }
+      }
+    }`;
+  
+    Client(mutation)
+  }
+
+  function pushEdgeChanges(change: any, edge_data: any) {
+    let mutation = gql`mutation {
+      updateEdge(eid: "${change.id}", edge: "${encodeURIComponent(edge_data)}") {
+        success
+        message
+        errors
+        edge {
+          eid
+        }
+      }
+    }`;
+
+    Client(mutation)
+  }
 
   function pushEdgeConnection(params: any) {
     let edge_data = JSON.stringify(params);
@@ -162,7 +183,6 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
   }
 
   function loadFlowNodesAndEdges(f: any) {
-    console.log("Loading flow: ", f);
     let query = gql`query {
       getNodes(flow_id: ${parseInt(f.id)}) {
         success
@@ -219,13 +239,16 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
 
       // Set the viewport
       if (f.position !== null || f.position !== undefined) {
-        console.log("Setting viewport: ", f.position);
         setViewport(f.position);
       }
     })
   }
 
   // Get current flow for workspace
+  const navigateToHome = () => {
+    navigate('/');
+  };
+
   useEffect(() => {
     // Setting values in the CSS files for the body affects the entire application
     document.body.style.padding = '0%';
@@ -234,11 +257,35 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
 
     urlLoadFlow();
 
-  }, [flow.flows, urlParams, flow.activeFlow]);
+  }, [flow.flows, urlParams, flow.activeFlow, selectedEdge, selectedNode]);
 
-  const navigateToHome = () => {
-    navigate('/');
-  };
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false;
+  }, []);
+
+  const onReconnect = useCallback((oldEdge: any, newConnection: any) => {
+    newConnection.id = oldEdge.id;
+    edgeReconnectSuccessful.current = true;
+    
+    pushEdgeChanges(newConnection.id, newConnection);
+
+    setEdges((eds: any) => {
+      let edges = eds.filter((e: any) => e.id !== oldEdge.id);
+      return addEdge(newConnection, edges);
+    })
+  }, []);
+
+  const onReconnectEnd = useCallback((_: any, edge: any) => {
+    if (!edgeReconnectSuccessful.current) {
+      removeEdge(edge.id);
+      setEdges((eds) => {
+        return eds.filter((e) => e.id !== edge.id)
+      });
+    }
+
+    edgeReconnectSuccessful.current = true;
+  }, []);
+
 
   const onNodesChange = useCallback(
     (changes: any) => {
@@ -249,8 +296,11 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
           pushNodeChanges(change, node_data);
         }
 
-        if ((change.type === 'select' || change.type === 'dragging')) {
+        if ((change.type === 'select' && change.selected === true)) {
           setSelectedNode(change.id);
+        }
+        else if (change.type === 'select' && change.selected === false) {
+          setSelectedNode(null);
         }
         
         if (change.type === 'remove') {
@@ -271,28 +321,24 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
     [selectedNode],
   );
 
-  // const onNodesDelete = useCallback(
-  //   (changes: any) => {
-  //   },
-  //   [],
-  // );
-
   const onEdgesChange = useCallback(
     (changes: any) => {
-      console.log("Edge change: ", changes);
+      for (let change of changes) {
+        if (change.type === 'select' && change.selected === true) {
+          setSelectedEdge(change.id);
+        }
+        else if (change.type === 'select' && change.selected === false) {
+          setSelectedEdge(null);
+        }
+
+        if (change.type === 'remove') {
+          removeEdge(change.id);
+        }
+      }
+      
       setEdges((eds: any) => {
         return applyEdgeChanges(changes, eds);
       });
-    },
-    [],
-  );
-
-  const onEdgesDelete = useCallback(
-    (changes: any) => {
-      // console.log("Edge delete: ", changes);
-      for (let change of changes) {
-        removeEdge(change.id);
-      }
     },
     [],
   );
@@ -360,12 +406,13 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onConnect={onConnect}
+          onReconnect={onReconnect}
           defaultNodes={initialNodes}
           defaultEdges={initialEdges}
           onNodesChange={onNodesChange}
-          // onNodesDelete={onNodesDelete}
-          onEdgesDelete={onEdgesDelete}
           onEdgesChange={onEdgesChange}
+          onReconnectEnd={onReconnectEnd}
+          onReconnectStart={onReconnectStart}
           defaultViewport={flow.activeFlow?.position ? flow.activeFlow.position : { x: 0, y: 0, zoom: 1 }}
         >
           <Background />
@@ -381,15 +428,25 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
                 }}>Edit</Button>
               <Button variant="Light" size="sm" onClick={() => {
                   deleteElements({ nodes: [{ id: selectedNode }] });
-                }
-              }>Delete</Button>
+                }}>
+                Delete
+              </Button>
             </ButtonGroup>
           </NodeToolbar>
 
           <Panel position="top-right">
-            <div>
-
-            </div>
+            <Accordion defaultActiveKey="0">
+              <Accordion.Item eventKey="0">
+                <Accordion.Header><b>: : :</b></Accordion.Header>
+                <Accordion.Body>
+                  { selectedEdge ? <div><p>Edge: {selectedEdge} </p><Button variant="light" size="sm" onClick={() => {
+                  deleteElements({ edges: [{ id: selectedEdge }] });
+                }}>Delete Edge</Button></div> :selectedNode ? <div><p>Node: {selectedNode} </p><Button variant="light" size="sm" onClick={() => {
+                  deleteElements({ nodes: [{ id: selectedNode }] });
+                }} >Delete Node</Button></div> : <p>-</p> }
+                </Accordion.Body>
+              </Accordion.Item>
+            </Accordion>
           </Panel>
 
           <Panel position="top-left">

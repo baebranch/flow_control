@@ -14,7 +14,7 @@ export function NewWorkspace({ show, setShow, setActiveWorkspace }: { show: bool
     if (data.createWorkspace.success) {
       setActiveWorkspace(data.createWorkspace.workspace);
       handleClose();
-      navigate('/designer');
+      navigate('/workspace/' + data.createWorkspace.workspace.slug + '/' + data.createWorkspace.workspace.default.slug);
     } else {
       alert(data.createWorkspace.errors);
     }
@@ -35,8 +35,18 @@ export function NewWorkspace({ show, setShow, setActiveWorkspace }: { show: bool
         errors
         workspace {
           id
+          slug
           name
           icon
+          default {
+            id
+            name
+            slug
+            description
+            created_at
+            updated_at
+            position
+          }
           description
           created_at
           updated_at

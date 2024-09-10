@@ -78,6 +78,9 @@ mutation.set_field("updateEdge", updateEdge)
 mutation.set_field("deleteEdge", deleteEdge)
 
 
+# Web App initialization
+app = web.Application()
+
 # Build schema
 if os.path.exists('assets'):
   type_defs = gql(load_schema_from_path("gql/"))
@@ -127,26 +130,23 @@ async def graphql_api_options(_: web.Request) -> web.Response:
 #         headers={key: value for key, value in response.headers.items()},
 #       )
 
+if os.path.exists('assets'):
+  app.add_routes([web.static('/assets', './assets')])
+  routes.static('/assets', './assets')
+else:
+  app.add_routes([web.static('/assets', 'dist/assets')])
+  routes.static('/assets', 'dist/assets')
+
 # Server index.html file
-@routes.get('/')
+@routes.route('*', "/{tail:.*}")
 async def index(request: web.Request):
+  print('Received request')
   if os.path.exists('assets'):
     return web.FileResponse('index.html')
   else:
     return web.FileResponse('dist/index.html')
 
-# Web App initialization
-app = web.Application()
 app.add_routes(routes)
-
-if os.path.exists('assets'):
-  print('Using assets static path')
-  app.add_routes([web.static('/', './')])
-  routes.static('/', './')
-else:
-  print('Using dist static path')
-  app.add_routes([web.static('/', 'dist')])
-  routes.static('/', 'dist')
 
 def run_app():
   logging.basicConfig(level=logging.DEBUG)

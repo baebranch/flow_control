@@ -4,19 +4,46 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build Windows Executable",
+      "label": "Build App",
       "type": "shell",
-      "command": "pyinstaller",
+      "dependsOn": [
+        "Build React App",
+        "Build Python App"
+      ],
+      "dependsOrder": "sequence",
+      "command": "xcopy",
+      "args": [
+        "/E",
+        "/I",
+        "server\\gql",
+        "dist\\gql",
+        "/y",
+        "&&",
+        "copy",
+        "desktop\\splash.html",
+        "dist",
+        "/y",
+        "&&",
+        "mkdir",
+        "dist\\data", 
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Python App",
+      "type": "shell",
+      "command": ".venv\\Scripts\\activate.bat && pyinstaller",
       "args": [
         "--onefile",
         "--noconsole",
         "--icon=favicon.ico",
+        // "flow.py",
         "flow.pyw"
       ],
       "problemMatcher": []
     },
     {
-      "label": "Build React APP",
+      "label": "Build React App",
       "type": "shell",
       "command": "npm",
       "args": [
