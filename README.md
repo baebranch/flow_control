@@ -29,13 +29,11 @@ npm run dev
 ```
 
 ## Building the app
-To build the app, run the following command:
-
-```bash
-pyinstaller --onefile --noconsole --icon=favicon.ico flow.pyw
+To build the app, run the following vs code task (reccomended):
 ```
-The executable will be in the `dist` folder.
-
+Build App
+```
+The executable will be in the `dist` folder, along with all required files.
 
 ## Customizing the app:
 
@@ -49,6 +47,8 @@ Links:
 
 - [React Flow - Docs](https://reactflow.dev)
 - [React Flow - Discord](https://discord.com/invite/Bqt6xrs)
+- [Aiohttp - Docs](https://docs.aiohttp.org/en/stable/)
+- [Graphql - Docs](https://graphql.org/learn/)
 
 Learn:
 
