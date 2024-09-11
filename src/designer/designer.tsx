@@ -174,6 +174,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
     }`;
 
     Client(query).then((data: any) => {
+      data.getFlows.flows.sort((a: any, b: any) => slugs.indexOf(a.slug) - slugs.indexOf(b.slug));
       if (data.getFlows.flows[data.getFlows.flows.length - 1].id !== flow?.activeFlow?.id) {
         flow.setFlows(data.getFlows.flows)
       }
@@ -364,7 +365,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
         if (activeWorkspace.default?.position !== null) {
           setViewport(activeWorkspace.default.position);
         }
-  
+        
         flow.setActiveFlow(activeWorkspace.default);
         flow.setFlows([activeWorkspace.default]);
         loadFlowNodesAndEdges(activeWorkspace.default);
@@ -378,7 +379,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
         if (activeWorkspace.default?.position !== null) {
           setViewport(activeWorkspace.default.position);
         }
-  
+        
         flow.setActiveFlow(activeWorkspace.default);
         flow.setFlows([activeWorkspace.default]);
         loadFlowNodesAndEdges(activeWorkspace.default);

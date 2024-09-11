@@ -47,13 +47,9 @@ export default function Home({setActiveWorkspace, flow}: {setActiveWorkspace: an
       }
     }`;
 
-    try {
-      await Client(query).then((data: any) => {
-        setWorkspaces(data.getWorkspaces.workspaces);
-      })
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
+    await Client(query).then((data: any) => {
+      setWorkspaces(data.getWorkspaces.workspaces);
+    })
   }, []);
 
   useEffect(() => {

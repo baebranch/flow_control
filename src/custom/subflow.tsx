@@ -1,17 +1,18 @@
 import "./custom.css";
 import { memo } from "react";
 import { Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { Handle, Position, NodeResizer } from 'reactflow';
 
 
 function SubFlowNode({ data, selected }: { data: any, selected: any }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
 
 
   const navigateToFlow = () => {
-    navigate(window.location.pathname + '/' + data.slug);
+    navigate(window.location.pathname + '/' + data.slug, { state });
   };
 
   return (
@@ -31,7 +32,6 @@ function SubFlowNode({ data, selected }: { data: any, selected: any }) {
         </div>
         <div className="card-footer">
           <Button variant="secondary" size="sm" onClick={() => {
-              console.log("Loading flow...");
               navigateToFlow();
             }}>
             {data.flow}
