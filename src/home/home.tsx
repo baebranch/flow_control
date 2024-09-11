@@ -34,6 +34,7 @@ export default function Home({setActiveWorkspace, flow}: {setActiveWorkspace: an
             id
             name
             slug
+            workspace_id
             description
             created_at
             updated_at

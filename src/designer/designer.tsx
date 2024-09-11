@@ -238,7 +238,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
       }
 
       // Set the viewport
-      if (f.position !== null || f.position !== undefined) {
+      if (f.position !== null && f.position !== undefined) {
         setViewport(f.position);
       }
     })

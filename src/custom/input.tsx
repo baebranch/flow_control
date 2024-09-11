@@ -16,6 +16,8 @@ function Input({ data, selected }: { data: any, selected: any }) {
           {data.label}
         <Handle type="source" position={Position.Bottom} id="a" />
         <Handle type="target" position={Position.Bottom} id="b" />
+        <Handle type="source" position={Position.Top} id="c" />
+        <Handle type="target" position={Position.Top} id="d" />
       </div>
     </>
   );

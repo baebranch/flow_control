@@ -41,6 +41,10 @@ function SubFlowNode({ data, selected }: { data: any, selected: any }) {
         <Handle type="source" position={Position.Bottom} id="b" />
         <Handle type="source" position={Position.Top} id="c" />
         <Handle type="target" position={Position.Bottom} id="d" />
+        <Handle type="target" position={Position.Left} id="e" />
+        <Handle type="source" position={Position.Right} id="f" />
+        <Handle type="source" position={Position.Left} id="g" />
+        <Handle type="target" position={Position.Right} id="h" />
       </div>
     </>
   );

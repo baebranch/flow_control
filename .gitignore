@@ -17,6 +17,7 @@ dist-ssr
 dist/*.exe
 build/*
 *.db
+settings.p
 
 # Editor directories and files
 !.vscode/extensions.json
