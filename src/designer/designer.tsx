@@ -257,8 +257,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
     document.body.style.height = '100%';
 
     urlLoadFlow();
-
-  }, [flow.flows, urlParams, flow.activeFlow, selectedEdge, selectedNode]);
+  }, [flow.flows, urlParams, flow.activeFlow]);
 
   const onReconnectStart = useCallback(() => {
     edgeReconnectSuccessful.current = false;
@@ -319,7 +318,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
         return applyNodeChanges(changes, nds);
       });
     },
-    [selectedNode],
+    [],
   );
 
   const onEdgesChange = useCallback(
@@ -358,6 +357,8 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
   ViewportChangeLogger(activeWorkspace, setActiveWorkspace, flow);
 
   function urlLoadFlow() {
+    setSelectedEdge(null);
+    setSelectedNode(null);
     let slugs = [urlParams.flowSlug].concat(urlParams['*']?.split('/').filter((slug: any) => slug !== ''));
 
     if (flow.activeFlow === null || flow.activeFlow === undefined) {
