@@ -442,7 +442,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
                 <Accordion.Body>
                   { selectedEdge ? <div><p>Edge: {selectedEdge} </p><Button variant="light" size="sm" onClick={() => {
                   deleteElements({ edges: [{ id: selectedEdge }] });
-                }}>Delete Edge</Button></div> :selectedNode ? <div><p>Node: {selectedNode} </p><Button variant="light" size="sm" onClick={() => {
+                }}>Delete Edge</Button></div> :selectedNode ? <div><p>Node: {selectedNode} </p><p>Type: {findNodeById(selectedNode, nodes).type} </p><Button variant="light" size="sm" onClick={() => {
                   deleteElements({ nodes: [{ id: selectedNode }] });
                 }} >Delete Node</Button></div> : <p>-</p> }
                 </Accordion.Body>
