@@ -17,7 +17,8 @@ def response_handler(func):
         }
       return data
     except Exception as error:
-      print(error)
+      # Print error in red
+      print("\033[91m" + str(error) + "\033[0m")
 
       # Rollback database session
       try:
