@@ -52,6 +52,7 @@ function EditNode({ show, setShow, setNodes, activeFlow, node }: { show: boolean
     // Loop over the form fields and add them to the node data field
     const formData: { [key: string]: string } = {};
     for (let i = 1; i < e.target.length-2; i++) {
+      if (e.target[i].name === "" || e.target[i].name === "slug") { continue; }
       const fieldName = e.target[i].name;
       const fieldValue = e.target[i].value;
       formData[fieldName] = fieldValue;
@@ -81,7 +82,7 @@ function EditNode({ show, setShow, setNodes, activeFlow, node }: { show: boolean
             <Form.Group className="mb-3" controlId="NewModal.NodeType">
             </Form.Group>
             {node && Object.keys(node.data).map((key: any) => {
-              if (key === "") { return null; }
+              if (key === "" || key === "slug") { return null; }
               else { return (RenderNodeTypeForm(key, node.data[key])); }
             })}
           </Modal.Body>
