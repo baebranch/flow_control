@@ -158,6 +158,13 @@ def updateNode(_, info, **kwargs):
   for key, value in kwargs.items():
     setattr(node, key, value)
   
+  
+  # If the node is a subflow, update the flow name and description
+  if node.node_type.slug == 'subflow':
+    flow = session.query(Flow).filter_by(slug=loads(node.node)['data']['slug'], workspace_id=node.workspace_id).first()
+    flow.name=loads(node.node)['data'].get('flow', 'SubFlow')
+    flow.description=loads(node.node)['data'].get('body', 'A subflow.')
+  
   updateFlowandWorksapceTS(node)
   
   session.commit()
