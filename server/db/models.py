@@ -56,6 +56,8 @@ class Flow(Base):
   nodes = relationship('Node', back_populates='flow', cascade='all, delete, delete-orphan')
   edges = relationship('Edge', back_populates='flow', cascade='all, delete, delete-orphan')
 
+  sql.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'])
+
   @validates('name')
   def validate_name(self, key, name):
     assert len(name) > 0
@@ -125,6 +127,8 @@ class Node(Base):
   node_type_id = sql.Column(sql.Integer, sql.ForeignKey('node_types.id'))
   node_type = relationship('NodeType', back_populates='nodes')
 
+  sql.ForeignKeyConstraint(['workspace_id', 'flow_id', 'node_type_id',], ['workspaces.id', 'flows.id', 'node_types.id'])
+
   @validates('name')
   def validate_name(self, key, name):
     assert len(name) > 0
@@ -155,6 +159,8 @@ class Edge(Base):
 
   edge_type_id = sql.Column(sql.Integer, sql.ForeignKey('edge_types.id'))
   edge_type = relationship('EdgeType', back_populates='edges')
+
+  sql.ForeignKeyConstraint(['workspace_id', 'flow_id', 'edge_type_id',], ['workspaces.id', 'flows.id', 'edge_types.id'])
 
   @validates('name')
   def validate_name(self, key, name):

@@ -15,8 +15,8 @@ function Output({ data, selected }: { data: any, selected: any }) {
       <div className="source-node">
           {data.label}
         <Handle type="target" position={Position.Top} id="a" />
-        <Handle type="source" position={Position.Top} id="b" />
         <Handle type="target" position={Position.Bottom} id="c" />
+        <Handle type="source" position={Position.Top} id="b" />
         <Handle type="source" position={Position.Bottom} id="d" />
       </div>
     </>

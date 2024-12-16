@@ -14,10 +14,10 @@ function Input({ data, selected }: { data: any, selected: any }) {
       />
       <div className="source-node">
           {data.label}
-        <Handle type="source" position={Position.Bottom} id="a" />
         <Handle type="target" position={Position.Bottom} id="b" />
-        <Handle type="source" position={Position.Top} id="c" />
         <Handle type="target" position={Position.Top} id="d" />
+        <Handle type="source" position={Position.Bottom} id="a" />
+        <Handle type="source" position={Position.Top} id="c" />
       </div>
     </>
   );

@@ -152,7 +152,7 @@ def updateNode(_, info, **kwargs):
 
   if node_data:= kwargs.pop('node', None):
     node_data = loads(unquote(node_data))
-    none_data.pop('selected', None)
+    node_data.pop('selected', None)
     kwargs['node'] = dumps({**loads(node.node), **node_data})
   
   for key, value in kwargs.items():

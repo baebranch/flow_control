@@ -36,7 +36,9 @@ import CardNode from "../custom/card";
 import Source from "../custom/source";
 import Output from "../custom/output";
 import Default from "../custom/default";
+import SubNodeModal from "./sub_node_modal";
 import SubFlowNode from "../custom/subflow";
+import GroupCardNode from "../custom/group_card";
 import { ViewportChangeLogger } from "../home/viewport_func";
 
 import type { EdgeTypes } from "reactflow";
@@ -48,7 +50,7 @@ let initialEdges: any[] = [];
 
 const nodeTypes: {} = {
   // Custom node types here!
-  source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode
+  source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode, group_card: GroupCardNode
 };
 const edgeTypes: {} = {
   // default: DefaultEdge
@@ -77,6 +79,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [selectedEdge, setSelectedEdge] = useState<any>(null);
+  const [showSubNodeModal, setShowSubNodeModal] = useState(false);
   
   function pushNodeChanges(change: any, node_data: any) {
     let mutation = gql`mutation {
@@ -324,6 +327,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
   const onEdgesChange = useCallback(
     (changes: any) => {
       for (let change of changes) {
+        console.log(change);
         if (change.type === 'select' && change.selected === true) {
           setSelectedEdge(change.id);
         }
@@ -345,11 +349,14 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
 
   const onConnect = useCallback(
     (changes: any) => {
+      console.log(changes);
       setEdges((eds: any) => {
         changes.id = uuidv4();
-        return addEdge(changes, eds);
+        let res = addEdge(changes, eds);
+        if (res.length > eds.length)
+          pushEdgeConnection(changes);
+        return res;
       })
-      pushEdgeConnection(changes);
     },
     [flow],
   );
@@ -421,17 +428,26 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
 
           <EditNode show={showEditModal} setShow={setShowEditModal} setNodes={setNodes} activeFlow={flow.activeFlow} node={foundNode} />
           <NewModal show={showNewModal} setShow={setShowNewModal} setNodes={setNodes} activeFlow={flow.activeFlow} />
+          <SubNodeModal show={showSubNodeModal} setShow={setShowSubNodeModal} setNodes={setNodes} activeFlow={flow.activeFlow} node={foundNode} />
 
           <NodeToolbar nodeId={selectedNode} position={Position.Top} offset={10} align="start">
             <ButtonGroup className="modify" aria-label="modify">
               <Button className="btn" variant="Light" size="sm" onClick={() => {
                   setFoundNode(findNodeById(selectedNode, nodes));                  
                   setShowEditModal(true);
-                }}>Edit</Button>
-              <Button variant="Light" size="sm" onClick={() => {
-                  deleteElements({ nodes: [{ id: selectedNode }] });
                 }}>
+                  Edit
+              </Button>
+              <Button variant="Light" size="sm" onClick={() => {
+                deleteElements({ nodes: [{ id: selectedNode }] });
+              }}>
                 Delete
+              </Button>
+              <Button variant="Light" size="sm" onClick={() => {
+                  setFoundNode(findNodeById(selectedNode, nodes));                  
+                  setShowSubNodeModal(true);
+                }}>
+                Sub Node
               </Button>
             </ButtonGroup>
           </NodeToolbar>
@@ -443,7 +459,7 @@ export default function Designer({ activeWorkspace, setActiveWorkspace, flow }: 
                 <Accordion.Body>
                   { selectedEdge ? <div><p>Edge: {selectedEdge} </p><Button variant="light" size="sm" onClick={() => {
                   deleteElements({ edges: [{ id: selectedEdge }] });
-                }}>Delete Edge</Button></div> :selectedNode ? <div><p>Node: {selectedNode} </p><p>Type: {findNodeById(selectedNode, nodes).type} </p><Button variant="light" size="sm" onClick={() => {
+                }}>Delete Edge</Button></div> :selectedNode ? <div><p>Node: {selectedNode} </p><p>Type: {findNodeById(selectedNode, nodes)?.type} </p><Button variant="light" size="sm" onClick={() => {
                   deleteElements({ nodes: [{ id: selectedNode }] });
                 }} >Delete Node</Button></div> : <p>-</p> }
                 </Accordion.Body>

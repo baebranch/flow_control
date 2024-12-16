@@ -1,10 +1,13 @@
 import os
+import logging
+import traceback
 
 from server.db.models import session
 
 
 # Constants
 VERSION = "0.0.1"
+logger = logging.getLogger("control")
 
 # Middleware
 def response_handler(func):
@@ -18,7 +21,8 @@ def response_handler(func):
       return data
     except Exception as error:
       # Print error in red
-      print("\033[91m" + str(error) + "\033[0m")
+      logger.error("\033[91m" + str(error) + "\033[0m")
+      logger.error(traceback.format_exc())
 
       # Rollback database session
       try:
