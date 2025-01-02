@@ -38,7 +38,6 @@ import Output from "../custom/output";
 import Default from "../custom/default";
 import SubNodeModal from "./sub_node_modal";
 import SubFlowNode from "../custom/subflow";
-import GroupCardNode from "../custom/group_card";
 import { ViewportChangeLogger } from "../home/viewport_func";
 
 import type { EdgeTypes } from "reactflow";
@@ -50,7 +49,7 @@ let initialEdges: any[] = [];
 
 const nodeTypes: {} = {
   // Custom node types here!
-  source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode, group_card: GroupCardNode
+  source: Source, card: CardNode, output: Output, input: Input, default: Default, subflow: SubFlowNode
 };
 const edgeTypes: {} = {
   // default: DefaultEdge
